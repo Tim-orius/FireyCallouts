@@ -26,6 +26,13 @@ namespace FireyCallouts{
             if (OnDuty) {
                 RegisterCallouts();
 
+                Game.Console.Print();
+                Game.Console.Print("------------ FireyCallouts ------------");
+                Game.Console.Print("[LOG]: Callouts loaded succesfully.");
+                Game.Console.Print("[VERSION]: Closed Alpha");
+                Game.Console.Print("------------ FireyCallouts ------------");
+                Game.Console.Print();
+
                 Game.DisplayNotification(
                         "web_lossantospolicedept", 
                         "web_lossantospolicedept", 
@@ -37,6 +44,9 @@ namespace FireyCallouts{
 
         private static void RegisterCallouts() {
             Functions.RegisterCallout(typeof(Callouts.LostFreight));
+            Functions.RegisterCallout(typeof(Callouts.DumpsterFire));
+            Functions.RegisterCallout(typeof(Callouts.HeliCrash));
+            Functions.RegisterCallout(typeof(Callouts.BurningTruck));
         }
 
     }

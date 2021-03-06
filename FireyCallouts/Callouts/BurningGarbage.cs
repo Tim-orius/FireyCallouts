@@ -12,8 +12,9 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 
 namespace FireyCallouts.Callouts {
-    [CalloutInfo("BurningGarbage", CalloutProbability.VeryHigh)]
-    class BurningGarbage : Callout {
+    [CalloutInfo("DumpsterFire", CalloutProbability.VeryHigh)]
+
+    class DumpsterFire : Callout {
 
         Random mrRandom = new Random();
 
@@ -29,19 +30,21 @@ namespace FireyCallouts.Callouts {
                                                                 new Vector3(-256.27f, 6247.1f, 31.49f)}; // Paleto
         private Vector3 spawnPoint;
         private Vector3 area;
-        private Fire fire;
+        private int fire;
         private Blip locationBlip;
         private LHandle pursuit;
 
         private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan"};
 
         public override bool OnBeforeCalloutDisplayed() {
-            // Random location for the fire
-            int chosen_location = mrRandom.Next(0, locations.Capacity);
-            spawnPoint = locations[chosen_location];
+            Game.LogTrivial("[FireyCallouts][Log] Initialising 'Dumpster Fire' callout.");
 
+            // Random location for the fire
+            int chosenLocation = mrRandom.Next(0, locations.Capacity);
+            spawnPoint = locations[chosenLocation];
+            
             // Create Fire
-            fire = new MyFire(spawnPoint, new Vector3(0, 0, 0), 600, 30, 2); // ----------------------------------------------
+            fire = NativeFunction.Natives.StartScriptFire(spawnPoint, 25, true);
 
             // create Suspect
             suspect = new Ped(spawnPoint.Around(20f));
@@ -59,10 +62,16 @@ namespace FireyCallouts.Callouts {
                 }
             }
 
+            pursuit = Functions.CreatePursuit();
+
+            Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
+
             return base.OnBeforeCalloutDisplayed();
         }
 
         public override bool OnCalloutAccepted() {
+            Game.LogTrivial("[FireyCallouts][Log] Accepted 'Dumpster Fire' callout.");
+
             area = spawnPoint.Around2D(1f, 2f);
             locationBlip = new Blip(area, 40f);
             locationBlip.Color = Color.Yellow;
@@ -72,17 +81,20 @@ namespace FireyCallouts.Callouts {
         }
 
         public override void OnCalloutNotAccepted(){
-            if(fire.Exists()) fire.Delete();
+            Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Dumpster Fire' callout.");
+
             if(suspect.Exists()) suspect.Delete();
             if(locationBlip.Exists()) locationBlip.Delete();
 
             base.OnCalloutNotAccepted();
+            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Dumpster Fire' callout.");
         }
 
         public override void Process() {
             base.Process();
 
             GameFiber.StartNew(delegate {
+
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
                     GameFiber.Wait(2000);
@@ -102,12 +114,14 @@ namespace FireyCallouts.Callouts {
         }
 
         public override void End() {
-            base.End();
 
             if (suspect.Exists()) { suspect.Dismiss(); }
             if(locationBlip.Exists()) locationBlip.Delete();
 
             Functions.PlayScannerAudio("WE_ARE_CODE FOUR");
+
+            base.End();
+            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Dumpster Fire' callout.");
         }
 
     }
