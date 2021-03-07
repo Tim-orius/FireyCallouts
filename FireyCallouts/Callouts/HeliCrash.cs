@@ -36,7 +36,7 @@ namespace FireyCallouts.Callouts {
             CalloutMessage = "Helicopter Crash";
             CalloutPosition = spawnPoint;
 
-            int decision = mrRandom.Next(0, helicopterModels.Length - 1);
+            int decision = mrRandom.Next(0, helicopterModels.Length);
             spawnPoint.Z = 30f;
             suspectVehicle = new Vehicle(helicopterModels[decision], spawnPoint);
             suspectVehicle.IsPersistent = true;
@@ -89,6 +89,7 @@ namespace FireyCallouts.Callouts {
                     suspect.KeepTasks = true;
                     GameFiber.Wait(2000);
                 }
+
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
                 if (Functions.IsPedArrested(suspect)) End();

@@ -33,6 +33,7 @@ namespace FireyCallouts.Callouts {
         private int fire;
         private Blip locationBlip;
         private LHandle pursuit;
+        private bool pursuitCreated = false;
 
         private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan"};
 
@@ -50,19 +51,18 @@ namespace FireyCallouts.Callouts {
             suspect = new Ped(spawnPoint.Around(20f));
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
+            suspect.Tasks.Wander();
 
             // Give suspect random weapon (from the above list)
-            int decision = mrRandom.Next(0,1);
-            if(decision == 1){
-                decision = mrRandom.Next(0, weaponList.Length - 1);
+            int decision = mrRandom.Next(0,3);
+            if(decision > 0){
+                decision = mrRandom.Next(0, weaponList.Length);
                 if (decision == 2){
                     suspect.Inventory.GiveNewWeapon(weaponList[decision], 1, true);
                 } else {
                     suspect.Inventory.GiveNewWeapon(weaponList[decision], 16, true);
                 }
             }
-
-            pursuit = Functions.CreatePursuit();
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
 
@@ -102,8 +102,11 @@ namespace FireyCallouts.Callouts {
                 
                 NativeFunction.CallByName<uint>("TASK_REACT_AND_FLEE_PED", suspect);
 
-                if(suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f){
+                if(!pursuitCreated && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f){
+                    pursuit = Functions.CreatePursuit();
                     Functions.AddPedToPursuit(pursuit, suspect);
+                    Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                    pursuitCreated = true;
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) End();

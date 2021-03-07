@@ -35,11 +35,10 @@ namespace FireyCallouts.Callouts {
             ShowCalloutAreaBlipBeforeAccepting(spawnPoint, 30f);
             AddMinimumDistanceCheck(40f, spawnPoint);
 
-            CalloutMessage = "Helicopter Crash";
+            CalloutMessage = "Burning Truck";
             CalloutPosition = spawnPoint;
 
-            int decision = mrRandom.Next(0, truckModels.Length - 1);
-            spawnPoint.Z = 30f;
+            int decision = mrRandom.Next(0, truckModels.Length);
             suspectVehicle = new Vehicle(truckModels[decision], spawnPoint);
             suspectVehicle.IsPersistent = true;
 
@@ -89,7 +88,7 @@ namespace FireyCallouts.Callouts {
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
                 if (Functions.IsPedArrested(suspect)) End();
-            }, "HeliCrash [FireyCallouts]");
+            }, "BurningTruck [FireyCallouts]");
         }
 
         public override void End() {

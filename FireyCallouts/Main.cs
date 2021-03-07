@@ -47,6 +47,7 @@ namespace FireyCallouts{
             Functions.RegisterCallout(typeof(Callouts.DumpsterFire));
             Functions.RegisterCallout(typeof(Callouts.HeliCrash));
             Functions.RegisterCallout(typeof(Callouts.BurningTruck));
+            Functions.RegisterCallout(typeof(Callouts.IllegalFirework));
         }
 
     }
