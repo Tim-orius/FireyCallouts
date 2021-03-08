@@ -54,7 +54,7 @@ namespace FireyCallouts.Callouts {
 
             suspectBlip = suspect.AttachBlip();
             suspectBlip.IsFriendly = true;
-            suspectBlip.EnableRoute(Color.Blue);
+            suspectBlip.EnableRoute(Color.Yellow);
 
             return base.OnCalloutAccepted();
         }

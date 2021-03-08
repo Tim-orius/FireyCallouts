@@ -29,14 +29,14 @@ namespace FireyCallouts {
                 Game.Console.Print();
                 Game.Console.Print("------------ FireyCallouts ------------");
                 Game.Console.Print("[LOG]: Callouts loaded succesfully.");
-                Game.Console.Print("[VERSION]: Closed Alpha");
+                Game.Console.Print("[VERSION]: Alpha");
                 Game.Console.Print("------------ FireyCallouts ------------");
                 Game.Console.Print();
 
                 Game.DisplayNotification(
                         "web_lossantospolicedept",
                         "web_lossantospolicedept",
-                        "FireryCallouts", // Title
+                        "FireyCallouts", // Title
                         "~y~v" + Assembly.GetExecutingAssembly().GetName().Version.ToString() +
                         " ~o~by Timorius", "~b~loaded successfully."); // Subtitle
             }
@@ -46,7 +46,7 @@ namespace FireyCallouts {
             Functions.RegisterCallout(typeof(Callouts.LostFreight));
             Functions.RegisterCallout(typeof(Callouts.DumpsterFire));
             Functions.RegisterCallout(typeof(Callouts.HeliCrash));
-            Functions.RegisterCallout(typeof(Callouts.BurningTruck));
+            // Functions.RegisterCallout(typeof(Callouts.BurningTruck));
             Functions.RegisterCallout(typeof(Callouts.IllegalFirework));
         }
 

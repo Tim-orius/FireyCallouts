@@ -23,9 +23,10 @@ namespace FireyCallouts.Callouts {
         private Vehicle suspectVehicle;
         private Vector3 spawnPoint;
         private Blip locationBlip;
-        private int fire;
         private string[] truckModels = new string[] { "mule", "pounder", "biff", "mixer", "mixer2", "rubble", "tiptruck",
                                                       "tiptruck2", "trash", "boxville", "benson", "barracks"};
+        private bool onFire;
+        private bool toldU = false;
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Burning Truck' callout.");
@@ -45,8 +46,6 @@ namespace FireyCallouts.Callouts {
             suspect = suspectVehicle.CreateRandomDriver();
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
-
-            suspect.Tasks.CruiseWithVehicle(15f);
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
@@ -83,7 +82,20 @@ namespace FireyCallouts.Callouts {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
                     // if (locationBlip.Exists()) locationBlip.Delete();
+                    //NativeFunction.Natives.START_ENTITY_FIRE(suspectVehicle);
+                    //NativeFunction.Natives.StartEntityFire(suspectVehicle);
                     NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
+                    //bool onFire = NativeFunction.Natives.IsEntityOnFire(suspectVehicle);
+                    onFire = suspectVehicle.IsOnFire;
+                    if (!toldU && !onFire) {
+                        if (onFire) {
+                            Game.LogTrivial("[FireyCallouts][Debug-Log] Truck is on fire!");
+                        } else {
+                            Game.LogTrivial("[FireyCallouts][Debug-Log] Truck is NOT on fire!");
+                        }
+                        toldU = true;
+                    }
+                    suspect.Tasks.CruiseWithVehicle(15f);
                     GameFiber.Wait(2000);
                 }
                 if (Game.LocalPlayer.Character.IsDead) End();

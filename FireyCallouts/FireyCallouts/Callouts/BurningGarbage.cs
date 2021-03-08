@@ -30,15 +30,19 @@ namespace FireyCallouts.Callouts {
                                                                 new Vector3(-256.27f, 6247.1f, 31.49f)}; // Paleto
         private Vector3 spawnPoint;
         private Vector3 area;
-        private int fire;
         private Blip locationBlip;
         private LHandle pursuit;
         private bool pursuitCreated = false;
 
-        private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan", "weapon_unarmed"};
+        private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan"};
+        private uint fire;
+        private uint[] fireList = new uint[10];
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Dumpster Fire' callout.");
+
+            int decision;
+            float offsetx, offsety, offsetz;
 
             // Random location for the fire
             int chosenLocation = mrRandom.Next(0, locations.Count);
@@ -46,22 +50,43 @@ namespace FireyCallouts.Callouts {
 
             // Create Fire
             Game.LogTrivial("[FireyCalouts][Debug-log] Create fire ...");
-            NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X, spawnPoint.Y, spawnPoint.Z, 25, true);
+            for (int f = 1; f < 11; f++) {
+                decision = mrRandom.Next(0, 6);
+                offsetx = decision * f / 100;
+                decision = mrRandom.Next(0, 6);
+                offsety = decision / f / 100;
+                decision = mrRandom.Next(0, 6);
+                offsetz = decision * f / 100;
+
+                decision = mrRandom.Next(0, 2);
+                if (decision == 0) {
+                    offsetx = -offsetx;
+                }
+                decision = mrRandom.Next(0, 2);
+                if (decision == 0) {
+                    offsetz = -offsetz;
+                }
+
+                fire = NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X + offsetx, spawnPoint.Y + offsety, spawnPoint.Z + offsetz, 25, true);
+                // fire = NativeFunction.Natives.StartScriptFire(spawnPoint.X + offsetx, spawnPoint.Y + offsety, spawnPoint.Z + offsetz, 25, true);
+                
+                fireList.Append(fire);
+            }
 
             // create Suspect
-            suspect = new Ped(spawnPoint.Around(20f));
+            suspect = new Ped(spawnPoint.Around(1f));
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
             suspect.Tasks.Wander();
 
             // Give suspect random weapon (from the above list)
-            int decision = mrRandom.Next(0,3);
+            decision = mrRandom.Next(0,3);
             if(decision > 0){
                 decision = mrRandom.Next(0, weaponList.Length);
                 if (decision == 2){
-                    suspect.Inventory.GiveNewWeapon(weaponList[decision], 1, true);
+                    suspect.Inventory.GiveNewWeapon(new WeaponAsset(weaponList[decision]), 1, true);
                 } else {
-                    suspect.Inventory.GiveNewWeapon(weaponList[decision], 16, true);
+                    suspect.Inventory.GiveNewWeapon(new WeaponAsset(weaponList[decision]), 16, true);
                 }
             }
 
@@ -87,6 +112,11 @@ namespace FireyCallouts.Callouts {
 
             if(suspect.Exists()) suspect.Delete();
             if(locationBlip.Exists()) locationBlip.Delete();
+
+            foreach (uint f in fireList) {
+                // NativeFunction.Natives.RemoveScriptFire(f);
+                NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
+            }
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Dumpster Fire' callout.");
@@ -115,7 +145,6 @@ namespace FireyCallouts.Callouts {
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
                 if (suspect.IsDead) End();
-                if (Functions.IsPedArrested(suspect)) End();
             }, "DumpsterFire [FireyCallouts]");
         }
 
@@ -123,6 +152,13 @@ namespace FireyCallouts.Callouts {
 
             if (suspect.Exists()) { suspect.Dismiss(); }
             if(locationBlip.Exists()) locationBlip.Delete();
+
+            /*
+            foreach (uint f in fireList) {
+                NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
+                // NativeFunction.Natives.RemoveScriptFire(f);
+            }
+            */
 
             Functions.PlayScannerAudio("WE_ARE_CODE_4");
 

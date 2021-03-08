@@ -38,7 +38,6 @@ namespace FireyCallouts.Callouts {
             CalloutPosition = spawnPoint;
 
             int decision = mrRandom.Next(0, helicopterModels.Length);
-            spawnPoint.Y += 10f;
             suspectVehicle = new Vehicle(helicopterModels[decision], spawnPoint);
             suspectVehicle.IsPersistent = true;
 
@@ -54,9 +53,6 @@ namespace FireyCallouts.Callouts {
 
         public override bool OnCalloutAccepted() {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Helicopter Crash' callout.");
-
-            suspectVehicle.Explode(false);
-            NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
 
             area = spawnPoint.Around2D(1f, 2f);
             locationBlip = new Blip(area, 40f);
@@ -85,6 +81,11 @@ namespace FireyCallouts.Callouts {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
                     if (locationBlip.Exists()) locationBlip.Delete();
+
+                    suspectVehicle.Explode(true);
+                    // NativeFunction.Natives.StartEntityFire(suspectVehicle);
+                    NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
+
                     GameFiber.Wait(2000);
                 }
 
