@@ -8,7 +8,7 @@ using LSPD_First_Response.Mod.API;
 using Rage;
 using FireyCallouts.Callouts;
 
-namespace FireyCallouts{
+namespace FireyCallouts {
     public class Main : Plugin {
 
         public override void Initialize() {
@@ -34,10 +34,10 @@ namespace FireyCallouts{
                 Game.Console.Print();
 
                 Game.DisplayNotification(
-                        "web_lossantospolicedept", 
-                        "web_lossantospolicedept", 
+                        "web_lossantospolicedept",
+                        "web_lossantospolicedept",
                         "FireryCallouts", // Title
-                        "~y~v" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + 
+                        "~y~v" + Assembly.GetExecutingAssembly().GetName().Version.ToString() +
                         " ~o~by Timorius", "~b~loaded successfully."); // Subtitle
             }
         }

@@ -13,67 +13,68 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 namespace FireyCallouts.Callouts {
 
-    [CalloutInfo("Burning Truck", CalloutProbability.VeryHigh)]
+    [CalloutInfo("Helicopter Crash", CalloutProbability.VeryHigh)]
 
-    class BurningTruck : Callout {
+    class HeliCrash : Callout {
 
         Random mrRandom = new Random();
 
         private Ped suspect;
         private Vehicle suspectVehicle;
         private Vector3 spawnPoint;
+        private Vector3 area;
         private Blip locationBlip;
-        private int fire;
-        private string[] truckModels = new string[] { "mule", "pounder", "biff", "mixer", "mixer2", "rubble", "tiptruck",
-                                                      "tiptruck2", "trash", "boxville", "benson", "barracks"};
+        private string[] helicopterModels = new string[] {"frogger", "frogger2", "maverick", "buzzard2"};
 
         public override bool OnBeforeCalloutDisplayed() {
-            Game.LogTrivial("[FireyCallouts][Log] Initialising 'Burning Truck' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Initialising 'Helicopter Crash' callout.");
 
             spawnPoint = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(350f));
 
             ShowCalloutAreaBlipBeforeAccepting(spawnPoint, 30f);
             AddMinimumDistanceCheck(40f, spawnPoint);
 
-            CalloutMessage = "Burning Truck";
+            CalloutMessage = "Helicopter Crash";
             CalloutPosition = spawnPoint;
 
-            int decision = mrRandom.Next(0, truckModels.Length);
-            suspectVehicle = new Vehicle(truckModels[decision], spawnPoint);
+            int decision = mrRandom.Next(0, helicopterModels.Length);
+            spawnPoint.Y += 10f;
+            suspectVehicle = new Vehicle(helicopterModels[decision], spawnPoint);
             suspectVehicle.IsPersistent = true;
 
             suspect = suspectVehicle.CreateRandomDriver();
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
 
-            suspect.Tasks.CruiseWithVehicle(15f);
-
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
+            Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
             return base.OnBeforeCalloutDisplayed();
         }
 
         public override bool OnCalloutAccepted() {
-            Game.LogTrivial("[FireyCallouts][Log] Accepted 'Burning Truck' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Accepted 'Helicopter Crash' callout.");
 
-            locationBlip = suspectVehicle.AttachBlip();
+            suspectVehicle.Explode(false);
+            NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
+
+            area = spawnPoint.Around2D(1f, 2f);
+            locationBlip = new Blip(area, 40f);
             locationBlip.Color = Color.Yellow;
             locationBlip.EnableRoute(Color.Yellow);
-
-            fire = NativeFunction.Natives.StartEntityFire(suspectVehicle);
 
             return base.OnCalloutAccepted();
         }
 
         public override void OnCalloutNotAccepted(){
-            Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Burning Truck' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Helicopter Crash' callout.");
 
             if(suspectVehicle.Exists()) suspectVehicle.Delete();
             if(suspect.Exists()) suspect.Delete();
             if(locationBlip.Exists()) locationBlip.Delete();
 
             base.OnCalloutNotAccepted();
-            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Burning Truck' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Helicopter Crash' callout.");
         }
 
         public override void Process() {
@@ -83,12 +84,14 @@ namespace FireyCallouts.Callouts {
             GameFiber.StartNew(delegate {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
+                    if (locationBlip.Exists()) locationBlip.Delete();
                     GameFiber.Wait(2000);
                 }
+
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
                 if (Functions.IsPedArrested(suspect)) End();
-            }, "BurningTruck [FireyCallouts]");
+            }, "HeliCrash [FireyCallouts]");
         }
 
         public override void End() {
@@ -97,10 +100,10 @@ namespace FireyCallouts.Callouts {
             if (suspectVehicle.Exists()) { suspectVehicle.Dismiss(); }
             if (locationBlip.Exists()) { locationBlip.Delete(); }
 
-            Functions.PlayScannerAudio("WE_ARE_CODE FOUR");
+            Functions.PlayScannerAudio("WE_ARE_CODE_FOUR");
 
             base.End();
-            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Burning Truck' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Helicopter Crash' callout.");
         }
     }
 }

@@ -55,6 +55,7 @@ namespace FireyCallouts.Callouts {
             decision = mrRandom.Next(0,2);
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
+            Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -73,16 +74,16 @@ namespace FireyCallouts.Callouts {
         public override void OnCalloutNotAccepted(){
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Illegal Firework' callout.");
 
-            if(suspect.Exists()) suspect.Delete();
-            if(locationBlip.Exists()) locationBlip.Delete();
+            if (suspect.Exists()) suspect.Delete();
+            if (dummy1.Exists()) dummy1.Delete();
+            if (dummy2.Exists()) dummy2.Delete();
+            if (locationBlip.Exists()) locationBlip.Delete();
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Illegal Firework' callout.");
         }
 
         public override void Process() {
-
-            base.Process();
 
             GameFiber.StartNew(delegate {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
@@ -92,8 +93,7 @@ namespace FireyCallouts.Callouts {
                 }
 
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f && !attacking){
-                    if (decision == 1)
-                    {
+                    if (decision == 1) {
                         new RelationshipGroup("attacker");
                         new RelationshipGroup("victim");
                         suspect.RelationshipGroup = "attacker";
@@ -103,35 +103,41 @@ namespace FireyCallouts.Callouts {
                         suspect.KeepTasks = true;
                         Game.SetRelationshipBetweenRelationshipGroups("attacker", "victim", Relationship.Hate);
                         suspect.Tasks.FightAgainstClosestHatedTarget(1000f);
-                        GameFiber.Wait(1000);
+                        GameFiber.Wait(2000);
+
+                        Game.LogTrivial("[FireyCalouts][Debug-log] Relations set");
 
                         suspect.Tasks.FightAgainst(Game.LocalPlayer.Character);
                         attacking = true;
                         GameFiber.Wait(600);
-                    }
-                    else {
+                    } else {
                         if(!pursuitCreated && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f){
                             pursuit = Functions.CreatePursuit();
                             Functions.AddPedToPursuit(pursuit, suspect);
                             Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                             pursuitCreated = true;
+                            Game.LogTrivial("[FireyCalouts][Debug-log] Puruit started");
                         }
                     }
                 }
 
-                if (Game.LocalPlayer.Character.IsDead) End();
-                if (suspect.IsDead) End();
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
-                if (Functions.IsPedArrested(suspect)) End();
+                if (Game.LocalPlayer.Character.IsDead) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Player died"); }
+                if (suspect.IsDead) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Suspect Arrested"); }
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Callout ended"); }
+                if (Functions.IsPedArrested(suspect)) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Suspect Arrested"); }
             }, "IllegalFirework [FireyCallouts]");
+
+            base.Process();
         }
 
         public override void End() {
 
             if (suspect.Exists()) { suspect.Dismiss(); }
+            if (dummy1.Exists()) dummy1.Dismiss();
+            if (dummy2.Exists()) dummy2.Dismiss();
             if (locationBlip.Exists()) { locationBlip.Delete(); }
 
-            Functions.PlayScannerAudio("WE_ARE_CODE FOUR");
+            Functions.PlayScannerAudio("WE_ARE_CODE_FOUR");
 
             base.End();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Illegal Firework' callout.");

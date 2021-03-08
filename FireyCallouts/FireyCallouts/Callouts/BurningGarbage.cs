@@ -12,7 +12,7 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 
 namespace FireyCallouts.Callouts {
-    [CalloutInfo("DumpsterFire", CalloutProbability.VeryHigh)]
+    [CalloutInfo("Dumpster Fire", CalloutProbability.VeryHigh)]
 
     class DumpsterFire : Callout {
 
@@ -35,17 +35,18 @@ namespace FireyCallouts.Callouts {
         private LHandle pursuit;
         private bool pursuitCreated = false;
 
-        private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan"};
+        private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan", "weapon_unarmed"};
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Dumpster Fire' callout.");
 
             // Random location for the fire
-            int chosenLocation = mrRandom.Next(0, locations.Capacity);
+            int chosenLocation = mrRandom.Next(0, locations.Count);
             spawnPoint = locations[chosenLocation];
-            
+
             // Create Fire
-            fire = NativeFunction.Natives.StartScriptFire(spawnPoint, 25, true);
+            Game.LogTrivial("[FireyCalouts][Debug-log] Create fire ...");
+            NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X, spawnPoint.Y, spawnPoint.Z, 25, true);
 
             // create Suspect
             suspect = new Ped(spawnPoint.Around(20f));
@@ -65,6 +66,7 @@ namespace FireyCallouts.Callouts {
             }
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
+            Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -97,6 +99,7 @@ namespace FireyCallouts.Callouts {
 
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
+                    if (locationBlip.Exists()) locationBlip.Delete();
                     GameFiber.Wait(2000);
                 }
                 
@@ -121,7 +124,7 @@ namespace FireyCallouts.Callouts {
             if (suspect.Exists()) { suspect.Dismiss(); }
             if(locationBlip.Exists()) locationBlip.Delete();
 
-            Functions.PlayScannerAudio("WE_ARE_CODE FOUR");
+            Functions.PlayScannerAudio("WE_ARE_CODE_4");
 
             base.End();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Dumpster Fire' callout.");

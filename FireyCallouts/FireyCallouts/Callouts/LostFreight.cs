@@ -44,6 +44,7 @@ namespace FireyCallouts.Callouts {
             suspect.BlockPermanentEvents = true;
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
+            Functions.PlayScannerAudio("UNITS_RESPOND_CODE_02");
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -75,16 +76,12 @@ namespace FireyCallouts.Callouts {
             base.Process();
 
             GameFiber.StartNew(delegate {
-                /*
-                if (suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
-                    if (suspectBlip.Exists()) suspectBlip.Delete();
-                }
-                */
-
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
+                    if (suspectBlip.Exists()) suspectBlip.Delete();
                     GameFiber.Wait(2000);
                 }
+
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
                 if (suspect.IsDead) End();
@@ -99,7 +96,7 @@ namespace FireyCallouts.Callouts {
             if (lostVehicle.Exists()) { lostVehicle.Dismiss(); }
             if (suspectBlip.Exists()) { suspectBlip.Delete(); }
 
-            Functions.PlayScannerAudio("WE_ARE_CODE FOUR");
+            Functions.PlayScannerAudio("WE_ARE_CODE_4");
 
             base.End();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Lost Freight' callout.");
