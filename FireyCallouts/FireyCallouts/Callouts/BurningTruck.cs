@@ -72,9 +72,9 @@ namespace FireyCallouts.Callouts {
         public override void OnCalloutNotAccepted(){
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Burning Truck' callout.");
 
-            if(suspectVehicle.Exists()) suspectVehicle.Delete();
-            if(suspect.Exists()) suspect.Delete();
-            if(locationBlip.Exists()) locationBlip.Delete();
+            if (suspect.Exists()) suspect.Delete();
+            if (suspectVehicle.Exists()) suspectVehicle.Delete();
+            if (locationBlip.Exists()) locationBlip.Delete();
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Burning Truck' callout.");
@@ -89,19 +89,23 @@ namespace FireyCallouts.Callouts {
                     suspect.KeepTasks = true;
 
                     // Make the truck burn
-                    suspectVehicle.EngineHealth = 0;
-                    GameFiber.Wait(5000);
-                    suspectVehicle.EngineHealth = 1;
-                    GameFiber.Wait(15000);
+                    if (suspectVehicle.Exists()) {
+                        suspectVehicle.EngineHealth = 0;
+                        GameFiber.Wait(5000);
+                        suspectVehicle.EngineHealth = 1;
+                        GameFiber.Wait(15000);
 
-                    if (willExplode) {
-                        suspectVehicle.Explode(true);
+                        if (willExplode) {
+                            suspectVehicle.Explode(true);
+                            willExplode = false;
+                        }
                     }
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
-                if (Functions.IsPedArrested(suspect)) End();
+                if (suspect.Exists()) { if (suspect.IsDead) End(); }
+                if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "BurningTruck [FireyCallouts]");
         }
 

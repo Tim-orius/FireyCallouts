@@ -66,10 +66,10 @@ namespace FireyCallouts.Callouts {
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Lost Freight' callout.");
 
             // Clean up if not accepted
-            if(suspectVehicle.Exists()) suspectVehicle.Delete();
-            if(lostVehicle.Exists()) lostVehicle.Delete();
-            if(suspect.Exists()) suspect.Delete();
-            if(suspectBlip.Exists()) suspectBlip.Delete();
+            if (suspect.Exists()) suspect.Delete();
+            if (suspectVehicle.Exists()) suspectVehicle.Delete();
+            if (lostVehicle.Exists()) lostVehicle.Delete();
+            if (suspectBlip.Exists()) suspectBlip.Delete();
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Lost Freight' callout.");
@@ -88,8 +88,8 @@ namespace FireyCallouts.Callouts {
 
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
-                if (suspect.IsDead) End();
-                if (Functions.IsPedArrested(suspect)) End();
+                if (suspect.Exists()) { if (suspect.IsDead) End(); }
+                if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "LostFreight [FireyCallouts]");
         }
 

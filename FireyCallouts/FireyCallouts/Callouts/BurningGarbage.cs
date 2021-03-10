@@ -36,7 +36,7 @@ namespace FireyCallouts.Callouts {
 
         private string[] weaponList = new string[] {"weapon_flaregun", "weapon_molotov", "weapon_petrolcan"};
         private uint fire;
-        private uint[] fireList = new uint[10];
+        private List<uint> fireList = new List<uint>();
         private bool endKeyPressed = false;
 
         public override bool OnBeforeCalloutDisplayed() {
@@ -65,7 +65,7 @@ namespace FireyCallouts.Callouts {
             ShowCalloutAreaBlipBeforeAccepting(spawnPoint, 30f);
             AddMinimumDistanceCheck(40f, spawnPoint);
 
-            CalloutMessage = "Illegal Firework";
+            CalloutMessage = "Dumpster Fire";
             CalloutPosition = spawnPoint;
 
             // Create Fire
@@ -92,7 +92,7 @@ namespace FireyCallouts.Callouts {
                 fire = NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X + offsetx, spawnPoint.Y + offsety + 0.1f, spawnPoint.Z + offsetz, 25, true);
                 //fire = NativeFunction.Natives.StartScriptFire(spawnPoint.X + offsetx, spawnPoint.Y + offsety, spawnPoint.Z + offsetz, 25, true);
                 
-                fireList.Append(fire);
+                fireList.Add(fire);
             }
 
             // create Suspect
@@ -168,7 +168,8 @@ namespace FireyCallouts.Callouts {
 
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) { endKeyPressed = true; End(); }
-                if (suspect.IsDead) End();
+                if (suspect.Exists()) { if (suspect.IsDead) End(); }
+                if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "DumpsterFire [FireyCallouts]");
         }
 

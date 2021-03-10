@@ -128,9 +128,9 @@ namespace FireyCallouts.Callouts {
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) { End(); }
-                if (suspect.IsDead) { End(); }
+                if (suspect.Exists()) { if (suspect.IsDead) End(); }
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) { End(); }
-                if (Functions.IsPedArrested(suspect)) { End(); }
+                if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "IllegalFirework [FireyCallouts]");
 
             base.Process();

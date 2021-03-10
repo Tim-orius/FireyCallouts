@@ -68,11 +68,11 @@ namespace FireyCallouts.Callouts {
 
         public override void OnCalloutNotAccepted(){
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Helicopter Crash' callout.");
-            
+
             // Clean up if callout not accepted
-            if(suspectVehicle.Exists()) suspectVehicle.Delete();
-            if(suspect.Exists()) suspect.Delete();
-            if(locationBlip.Exists()) locationBlip.Delete();
+            if (suspect.Exists()) suspect.Delete();
+            if (suspectVehicle.Exists()) suspectVehicle.Delete();
+            if (locationBlip.Exists()) locationBlip.Delete();
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Helicopter Crash' callout.");
@@ -87,17 +87,19 @@ namespace FireyCallouts.Callouts {
                     suspect.KeepTasks = true;
                     if (locationBlip.Exists()) locationBlip.Delete();
 
-                    suspectVehicle.Explode(true);
-                    // !!! EntityFire currently only works for class Ped
-                    //NativeFunction.Natives.StartEntityFire(suspectVehicle);
-                    //NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
+                    if (suspectVehicle.Exists()) {
+                        suspectVehicle.Explode(true);
+                        // !!! EntityFire currently only works for class Ped
+                        //NativeFunction.Natives.StartEntityFire(suspectVehicle);
+                        //NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
+                    }
 
                     GameFiber.Wait(2000);
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
-                if (Functions.IsPedArrested(suspect)) End();
+                if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "HeliCrash [FireyCallouts]");
         }
 
