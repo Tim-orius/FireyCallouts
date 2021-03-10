@@ -62,6 +62,12 @@ namespace FireyCallouts.Callouts {
             int chosenLocation = mrRandom.Next(0, possibleLocations.Count);
             spawnPoint = possibleLocations[chosenLocation];
 
+            ShowCalloutAreaBlipBeforeAccepting(spawnPoint, 30f);
+            AddMinimumDistanceCheck(40f, spawnPoint);
+
+            CalloutMessage = "Illegal Firework";
+            CalloutPosition = spawnPoint;
+
             // Create Fire
             for (int f = 1; f < 11; f++) {
                 // Spawn several fires with random offset positions to generate a bigger fire

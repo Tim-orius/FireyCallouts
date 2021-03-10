@@ -29,16 +29,16 @@ namespace FireyCallouts {
                 Game.Console.Print();
                 Game.Console.Print("------------ FireyCallouts ------------");
                 Game.Console.Print("[LOG]: Callouts loaded succesfully.");
-                Game.Console.Print("[VERSION]: Alpha");
+                Game.Console.Print("[VERSION]: " + Assembly.GetExecutingAssembly().GetName().Version.ToString());
                 Game.Console.Print("------------ FireyCallouts ------------");
                 Game.Console.Print();
 
                 Game.DisplayNotification(
                         "web_lossantospolicedept",
                         "web_lossantospolicedept",
-                        "FireyCallouts", // Title
+                        "FireyCallouts",
                         "~y~v" + Assembly.GetExecutingAssembly().GetName().Version.ToString() +
-                        " ~o~by Timorius", "~b~loaded successfully."); // Subtitle
+                        " ~o~by Timorius", "~b~loaded successfully.");
             }
         }
 
