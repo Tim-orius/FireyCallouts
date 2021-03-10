@@ -13,7 +13,7 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 namespace FireyCallouts.Callouts {
 
-    [CalloutInfo("Illegal Firework", CalloutProbability.VeryHigh)]
+    [CalloutInfo("Illegal Firework", CalloutProbability.Low)]
 
     class IllegalFirework : Callout {
 
@@ -40,10 +40,12 @@ namespace FireyCallouts.Callouts {
             CalloutMessage = "Illegal Firework";
             CalloutPosition = spawnPoint;
 
+            // Initialise peds
             suspect = new Ped(spawnPoint.Around(10f));
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
             suspect.Tasks.Wander();
+            // Give weapon to suspect
             suspect.Inventory.GiveNewWeapon(new WeaponAsset("weapon_firework"), 10, true);
 
             dummy1 = new Ped(spawnPoint);
@@ -94,6 +96,7 @@ namespace FireyCallouts.Callouts {
 
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f && !attacking){
                     if (decision == 1) {
+                        // Set relationships for peds
                         new RelationshipGroup("attacker");
                         new RelationshipGroup("victim");
                         suspect.RelationshipGroup = "attacker";
@@ -101,30 +104,33 @@ namespace FireyCallouts.Callouts {
                         dummy2.RelationshipGroup = "victim";
 
                         suspect.KeepTasks = true;
+
+                        // Make suspect shoot with weapon
                         Game.SetRelationshipBetweenRelationshipGroups("attacker", "victim", Relationship.Hate);
                         suspect.Tasks.FightAgainstClosestHatedTarget(1000f);
                         GameFiber.Wait(2000);
 
-                        Game.LogTrivial("[FireyCalouts][Debug-log] Relations set");
-
+                        // Make suspect attack player
                         suspect.Tasks.FightAgainst(Game.LocalPlayer.Character);
                         attacking = true;
                         GameFiber.Wait(600);
                     } else {
+
+                        // Create pursuit (if none exists yet)
                         if(!pursuitCreated && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f){
                             pursuit = Functions.CreatePursuit();
                             Functions.AddPedToPursuit(pursuit, suspect);
                             Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                             pursuitCreated = true;
-                            Game.LogTrivial("[FireyCalouts][Debug-log] Puruit started");
+                            Game.LogTrivial("[FireyCalouts][Debug-log] Pursuit started");
                         }
                     }
                 }
 
-                if (Game.LocalPlayer.Character.IsDead) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Player died"); }
-                if (suspect.IsDead) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Suspect Arrested"); }
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Callout ended"); }
-                if (Functions.IsPedArrested(suspect)) { End(); Game.LogTrivial("[FireyCalouts][Debug-log] Suspect Arrested"); }
+                if (Game.LocalPlayer.Character.IsDead) { End(); }
+                if (suspect.IsDead) { End(); }
+                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) { End(); }
+                if (Functions.IsPedArrested(suspect)) { End(); }
             }, "IllegalFirework [FireyCallouts]");
 
             base.Process();

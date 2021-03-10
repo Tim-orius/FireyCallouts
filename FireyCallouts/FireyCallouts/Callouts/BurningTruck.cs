@@ -13,7 +13,7 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 namespace FireyCallouts.Callouts {
 
-    [CalloutInfo("Burning Truck", CalloutProbability.VeryHigh)]
+    [CalloutInfo("Burning Truck", CalloutProbability.Low)]
 
     class BurningTruck : Callout {
 
@@ -25,8 +25,7 @@ namespace FireyCallouts.Callouts {
         private Blip locationBlip;
         private string[] truckModels = new string[] { "mule", "pounder", "biff", "mixer", "mixer2", "rubble", "tiptruck",
                                                       "tiptruck2", "trash", "boxville", "benson", "barracks"};
-        private bool onFire;
-        private bool toldU = false;
+        private bool willExplode = false;
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Burning Truck' callout.");
@@ -39,6 +38,7 @@ namespace FireyCallouts.Callouts {
             CalloutMessage = "Burning Truck";
             CalloutPosition = spawnPoint;
 
+            // Initialise ped and vehicle
             int decision = mrRandom.Next(0, truckModels.Length);
             suspectVehicle = new Vehicle(truckModels[decision], spawnPoint);
             suspectVehicle.IsPersistent = true;
@@ -46,6 +46,12 @@ namespace FireyCallouts.Callouts {
             suspect = suspectVehicle.CreateRandomDriver();
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
+            suspect.Tasks.CruiseWithVehicle(15f);
+
+            decision = mrRandom.Next(0, 2);
+            if (decision == 1) {
+                willExplode = true;
+            }
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
@@ -81,23 +87,18 @@ namespace FireyCallouts.Callouts {
             GameFiber.StartNew(delegate {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     suspect.KeepTasks = true;
-                    // if (locationBlip.Exists()) locationBlip.Delete();
-                    //NativeFunction.Natives.START_ENTITY_FIRE(suspectVehicle);
-                    //NativeFunction.Natives.StartEntityFire(suspectVehicle);
-                    NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
-                    //bool onFire = NativeFunction.Natives.IsEntityOnFire(suspectVehicle);
-                    onFire = suspectVehicle.IsOnFire;
-                    if (!toldU && !onFire) {
-                        if (onFire) {
-                            Game.LogTrivial("[FireyCallouts][Debug-Log] Truck is on fire!");
-                        } else {
-                            Game.LogTrivial("[FireyCallouts][Debug-Log] Truck is NOT on fire!");
-                        }
-                        toldU = true;
+
+                    // Make the truck burn
+                    suspectVehicle.EngineHealth = 0;
+                    GameFiber.Wait(5000);
+                    suspectVehicle.EngineHealth = 1;
+                    GameFiber.Wait(15000);
+
+                    if (willExplode) {
+                        suspectVehicle.Explode(true);
                     }
-                    suspect.Tasks.CruiseWithVehicle(15f);
-                    GameFiber.Wait(2000);
                 }
+
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
                 if (Functions.IsPedArrested(suspect)) End();

@@ -12,7 +12,7 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 namespace FireyCallouts.Callouts {
 
-    [CalloutInfo("Lost Freight", CalloutProbability.VeryHigh)]
+    [CalloutInfo("Lost Freight", CalloutProbability.Low)]
 
     class LostFreight : Callout {
 
@@ -33,6 +33,7 @@ namespace FireyCallouts.Callouts {
             CalloutMessage = "Lost Freight";
             CalloutPosition = spawnPoint;
 
+            // Initialise vehicle(s) and ped
             suspectVehicle = new Vehicle("FLATBED", spawnPoint);
             suspectVehicle.IsPersistent = true;
 
@@ -52,8 +53,10 @@ namespace FireyCallouts.Callouts {
         public override bool OnCalloutAccepted() {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Lost Freight' callout.");
 
+            // Show route for player
             suspectBlip = suspect.AttachBlip();
             suspectBlip.IsFriendly = true;
+            suspectBlip.Color = Color.Yellow;
             suspectBlip.EnableRoute(Color.Yellow);
 
             return base.OnCalloutAccepted();
@@ -62,6 +65,7 @@ namespace FireyCallouts.Callouts {
         public override void OnCalloutNotAccepted(){
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Lost Freight' callout.");
 
+            // Clean up if not accepted
             if(suspectVehicle.Exists()) suspectVehicle.Delete();
             if(lostVehicle.Exists()) lostVehicle.Delete();
             if(suspect.Exists()) suspect.Delete();

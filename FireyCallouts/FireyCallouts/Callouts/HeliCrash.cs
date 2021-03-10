@@ -13,7 +13,7 @@ using LSPD_First_Response.Engine.Scripting.Entities;
 
 namespace FireyCallouts.Callouts {
 
-    [CalloutInfo("Helicopter Crash", CalloutProbability.VeryHigh)]
+    [CalloutInfo("Helicopter Crash", CalloutProbability.Low)]
 
     class HeliCrash : Callout {
 
@@ -37,14 +37,17 @@ namespace FireyCallouts.Callouts {
             CalloutMessage = "Helicopter Crash";
             CalloutPosition = spawnPoint;
 
+            // Initialise vehicle
             int decision = mrRandom.Next(0, helicopterModels.Length);
             suspectVehicle = new Vehicle(helicopterModels[decision], spawnPoint);
             suspectVehicle.IsPersistent = true;
 
+            // Initialise ped
             suspect = suspectVehicle.CreateRandomDriver();
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
 
+            // Play audio
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
@@ -54,6 +57,7 @@ namespace FireyCallouts.Callouts {
         public override bool OnCalloutAccepted() {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Helicopter Crash' callout.");
 
+            // Show route for player
             area = spawnPoint.Around2D(1f, 2f);
             locationBlip = new Blip(area, 40f);
             locationBlip.Color = Color.Yellow;
@@ -64,7 +68,8 @@ namespace FireyCallouts.Callouts {
 
         public override void OnCalloutNotAccepted(){
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Helicopter Crash' callout.");
-
+            
+            // Clean up if callout not accepted
             if(suspectVehicle.Exists()) suspectVehicle.Delete();
             if(suspect.Exists()) suspect.Delete();
             if(locationBlip.Exists()) locationBlip.Delete();
@@ -83,8 +88,9 @@ namespace FireyCallouts.Callouts {
                     if (locationBlip.Exists()) locationBlip.Delete();
 
                     suspectVehicle.Explode(true);
-                    // NativeFunction.Natives.StartEntityFire(suspectVehicle);
-                    NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
+                    // !!! EntityFire currently only works for class Ped
+                    //NativeFunction.Natives.StartEntityFire(suspectVehicle);
+                    //NativeFunction.CallByName<uint>("START_ENTITY_FIRE", suspectVehicle);
 
                     GameFiber.Wait(2000);
                 }
@@ -97,6 +103,7 @@ namespace FireyCallouts.Callouts {
 
         public override void End() {
 
+            // Clean up
             if (suspect.Exists()) { suspect.Dismiss(); }
             if (suspectVehicle.Exists()) { suspectVehicle.Dismiss(); }
             if (locationBlip.Exists()) { locationBlip.Delete(); }
