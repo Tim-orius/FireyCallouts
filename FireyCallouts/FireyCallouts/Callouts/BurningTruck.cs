@@ -17,7 +17,7 @@ namespace FireyCallouts.Callouts {
 
     class BurningTruck : Callout {
 
-        Random mrRandom = new Random();
+        private Random mrRandom = new Random();
 
         private Ped suspect;
         private Vehicle suspectVehicle;

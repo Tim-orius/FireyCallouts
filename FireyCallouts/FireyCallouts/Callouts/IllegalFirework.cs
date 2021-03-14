@@ -17,7 +17,7 @@ namespace FireyCallouts.Callouts {
 
     class IllegalFirework : Callout {
 
-        Random mrRandom = new Random();
+        private Random mrRandom = new Random();
 
         private Ped suspect;
         private Ped dummy1, dummy2;

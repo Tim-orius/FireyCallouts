@@ -16,7 +16,7 @@ namespace FireyCallouts.Callouts {
 
     class DumpsterFire : Callout {
 
-        Random mrRandom = new Random();
+        private Random mrRandom = new Random();
 
         private Ped suspect;
         private List<Vector3> locations = new List<Vector3>() { new Vector3(-857.6f, -240.9f, 39.5f), // Rockford Hills
@@ -54,6 +54,7 @@ namespace FireyCallouts.Callouts {
             }
 
             if (possibleLocations.Count < 1) {
+                Game.LogTrivial("[FireyCallouts][Log] Abort 'Dumpster Fire' callout. player too far away from all locations.");
                 OnCalloutNotAccepted();
                 return false;
             }
