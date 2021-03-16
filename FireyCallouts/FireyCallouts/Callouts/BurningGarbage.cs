@@ -45,18 +45,17 @@ namespace FireyCallouts.Callouts {
             int decision;
             float offsetx, offsety, offsetz;
 
-            // Check locations around 400f to the player
+            // Check locations around 800f to the player
             List<Vector3> possibleLocations = new List<Vector3>();
             foreach (Vector3 l in locations) {
-                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 400f) {
+                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f) {
                     possibleLocations.Add(l);
                 }
             }
 
             if (possibleLocations.Count < 1) {
                 Game.LogTrivial("[FireyCallouts][Log] Abort 'Dumpster Fire' callout. player too far away from all locations.");
-                OnCalloutNotAccepted();
-                return false;
+                return AbortCallout();
             }
 
             // Random location for the fire
@@ -88,10 +87,9 @@ namespace FireyCallouts.Callouts {
                     offsetz = -offsetz;
                 }
 
-                // !!! Via Natives returns null, via callby returns uint
                 // These fires do not extinguish by themselves.
-                fire = NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X + offsetx, spawnPoint.Y + offsety + 0.1f, spawnPoint.Z + offsetz, 25, true);
-                //fire = NativeFunction.Natives.StartScriptFire(spawnPoint.X + offsetx, spawnPoint.Y + offsety, spawnPoint.Z + offsetz, 25, true);
+                //fire = NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X + offsetx, spawnPoint.Y + offsety + 0.1f, spawnPoint.Z + offsetz, 25, true);
+                fire = NativeFunction.Natives.StartScriptFire<uint>(spawnPoint.X + offsetx, spawnPoint.Y + offsety, spawnPoint.Z + offsetz, 25, true);
                 
                 fireList.Add(fire);
             }
@@ -120,6 +118,22 @@ namespace FireyCallouts.Callouts {
             return base.OnBeforeCalloutDisplayed();
         }
 
+        public bool AbortCallout() {
+            Game.LogTrivial("[FireyCallouts][Log] Clean up 'Dumpster Fire' callout.");
+
+            // Clean up if not accepted
+            if (suspect.Exists()) suspect.Delete();
+            if (locationBlip.Exists()) locationBlip.Delete();
+
+            foreach (uint f in fireList) {
+                NativeFunction.Natives.RemoveScriptFire(f);
+                //NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
+            }
+
+            Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Dumpster Fire' callout.");
+            return false;
+        }
+
         public override bool OnCalloutAccepted() {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Dumpster Fire' callout.");
 
@@ -139,8 +153,8 @@ namespace FireyCallouts.Callouts {
             if(locationBlip.Exists()) locationBlip.Delete();
 
             foreach (uint f in fireList) {
-                // NativeFunction.Natives.RemoveScriptFire(f);
-                NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
+                NativeFunction.Natives.RemoveScriptFire(f);
+                //NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
             }
 
             base.OnCalloutNotAccepted();
@@ -183,8 +197,8 @@ namespace FireyCallouts.Callouts {
             // Warning: ending the callout without deleting the fires is causing the fires to burn indefinitely
             if (endKeyPressed) {
                 foreach (uint f in fireList) {
-                    NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
-                    // NativeFunction.Natives.RemoveScriptFire(f);
+                    //NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
+                    NativeFunction.Natives.RemoveScriptFire(f);
                 }
             }
 

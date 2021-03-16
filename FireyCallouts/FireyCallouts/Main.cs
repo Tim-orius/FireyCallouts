@@ -43,11 +43,13 @@ namespace FireyCallouts {
         }
 
         private static void RegisterCallouts() {
+            Functions.RegisterCallout(typeof(Callouts.PlaneTesting));
             Functions.RegisterCallout(typeof(Callouts.LostFreight));
             Functions.RegisterCallout(typeof(Callouts.DumpsterFire));
             Functions.RegisterCallout(typeof(Callouts.HeliCrash));
             Functions.RegisterCallout(typeof(Callouts.BurningTruck));
             Functions.RegisterCallout(typeof(Callouts.IllegalFirework));
+            Functions.RegisterCallout(typeof(Callouts.PlaneLanding));
         }
 
     }
