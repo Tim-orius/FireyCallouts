@@ -9,6 +9,7 @@ using Rage.Native;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Mod.Callouts;
 using LSPD_First_Response.Engine.Scripting.Entities;
+using FireyCallouts.Utilitys;
 
 
 namespace FireyCallouts.Callouts {
@@ -98,7 +99,7 @@ namespace FireyCallouts.Callouts {
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) End();
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
+                if (Game.IsKeyDown(Initialization.endKey)) End();
                 if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "HeliCrash [FireyCallouts]");
         }

@@ -9,6 +9,7 @@ using Rage.Native;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Mod.Callouts;
 using LSPD_First_Response.Engine.Scripting.Entities;
+using FireyCallouts.Utilitys;
 
 
 namespace FireyCallouts.Callouts {
@@ -47,6 +48,7 @@ namespace FireyCallouts.Callouts {
             suspect.Tasks.Wander();
             // Give weapon to suspect
             suspect.Inventory.GiveNewWeapon(new WeaponAsset("weapon_firework"), 10, true);
+            Game.LogTrivial("[FireyCalouts][Debug-log] Firework: Suspect spawned at position " + suspect.Position.ToString());
 
             dummy1 = new Ped(spawnPoint);
             dummy2 = new Ped(spawnPoint);
@@ -108,12 +110,16 @@ namespace FireyCallouts.Callouts {
                         // Make suspect shoot with weapon
                         Game.SetRelationshipBetweenRelationshipGroups("attacker", "victim", Relationship.Hate);
                         suspect.Tasks.FightAgainstClosestHatedTarget(1000f);
+
+                        Game.LogTrivial("[FireyCalouts][Debug-log] Firework: suspect attacking");
                         GameFiber.Wait(2000);
 
                         // Make suspect attack player
                         suspect.Tasks.FightAgainst(Game.LocalPlayer.Character);
                         attacking = true;
-                        GameFiber.Wait(600);
+
+                        Game.LogTrivial("[FireyCalouts][Debug-log] Firework: dec-1 finish");
+                        GameFiber.Wait(1000);
                     } else {
 
                         // Create pursuit (if none exists yet)
@@ -129,7 +135,7 @@ namespace FireyCallouts.Callouts {
 
                 if (Game.LocalPlayer.Character.IsDead) { End(); }
                 if (suspect.Exists()) { if (suspect.IsDead) End(); }
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) { End(); }
+                if (Game.IsKeyDown(Initialization.endKey)) { End(); }
                 if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "IllegalFirework [FireyCallouts]");
 

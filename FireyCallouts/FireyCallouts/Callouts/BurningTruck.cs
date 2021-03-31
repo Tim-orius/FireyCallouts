@@ -9,6 +9,7 @@ using Rage.Native;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Mod.Callouts;
 using LSPD_First_Response.Engine.Scripting.Entities;
+using FireyCallouts.Utilitys;
 
 
 namespace FireyCallouts.Callouts {
@@ -86,24 +87,39 @@ namespace FireyCallouts.Callouts {
 
             GameFiber.StartNew(delegate {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
-                    suspect.KeepTasks = true;
+                    
+                    if (Utils.gamemode == Utils.Gamemodes.Pol) {
+                        suspect.KeepTasks = true;
+                        Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Pol mode notice");
+                    } else {
+                        suspect.Tasks.PerformDrivingManeuver(suspectVehicle, VehicleManeuver.GoForwardStraightBraking, 100);
+                        Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Fire mode notice 1");
+                    }
 
                     // Make the truck burn
                     if (suspectVehicle.Exists()) {
                         suspectVehicle.EngineHealth = 0;
+                        Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Now smoking");
                         GameFiber.Wait(5000);
+
+                        if (Utils.gamemode == Utils.Gamemodes.Fire && suspect.Exists()) {
+                            Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Fire mode notice 2");
+                            suspect.Tasks.LeaveVehicle(LeaveVehicleFlags.BailOut);
+                        }
+
                         suspectVehicle.EngineHealth = 1;
                         GameFiber.Wait(15000);
 
                         if (willExplode) {
                             suspectVehicle.Explode(true);
                             willExplode = false;
+                            Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Explode");
                         }
                     }
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) End();
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
+                if (Game.IsKeyDown(Initialization.endKey)) End();
                 if (suspect.Exists()) { if (suspect.IsDead) End(); }
                 if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "BurningTruck [FireyCallouts]");

@@ -9,6 +9,7 @@ using Rage.Native;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Mod.Callouts;
 using LSPD_First_Response.Engine.Scripting.Entities;
+using FireyCallouts.Utilitys;
 
 
 namespace FireyCallouts.Callouts {
@@ -49,136 +50,8 @@ namespace FireyCallouts.Callouts {
             ShowCalloutAreaBlipBeforeAccepting(spawnPoints[0], 30f);
             AddMinimumDistanceCheck(40f, spawnPoints[0]);
 
-            CalloutMessage = "Plane Testing";
+            CalloutMessage = "Plane Testing; NO REGULAR CALLOUT; FOR TESTING PURPOSES!";
             CalloutPosition = spawnPoints[0];
-
-            int jj, kk, ll;
-            int testGroups = 8;
-            Vector3 spawnPoint;
-            string planeModel;
-
-            ll = 0;
-            planeModel = planeModels[0];
-
-            for (int ii = 0; ii < testGroups; ii++) {
-                kk = ii + (ll * testGroups);
-
-                jj = ii % (testGroups / 2);
-
-                spawnPoint = spawnPoints[ii];
-
-                Game.LogTrivial("[FireyCallouts][Debug]" + ii.ToString());
-
-                // Initialise vehicle
-                suspectVehicles.Add(new Vehicle(planeModel, spawnPoint));
-
-                Game.LogTrivial("[FireyCallouts][Debug] xx " + jj.ToString());
-
-                // Initialise ped
-                suspects.Add(suspectVehicles[ii].CreateRandomDriver());
-
-                suspectVehicles[ii].Face(landPoint);
-
-                /* Model: velum
-                 * 
-                 * Height = approx. 108f
-                 * Same results for 0, 1 and 3; Jumps out for 2!
-                 * 
-                 * Height = 300f / 600f
-                 * 1 & 3 gliding, 0 falling
-                 * 
-                 */
-
-                switch (jj) {
-                    case 0: { // TASK.LANDPLANE
-
-                            /*
-                             * Engine: starts
-                             * Driver: stays
-                             * Flys properly: no
-                             * Dropping: high variance, loosing control? Redirecting to landpoint?
-                             */
-
-                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
-
-                            suspects[ii].Tasks.LandPlane(suspectVehicles[ii], spawnPoint, landPoint);
-
-                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
-                            break;
-                        }
-                    case 1: { // TASK.CRUISEWITHVEHICLE
-
-                            /*
-                             * Engine: starts
-                             * Driver: stays
-                             * Flys properly: no
-                             * Dropping: low variance, straight
-                             */
-
-                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
-
-                            suspects[ii].Tasks.CruiseWithVehicle(suspectVehicles[ii], flySpeed, VehicleDrivingFlags.IgnorePathFinding);
-
-                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
-
-                            break;
-                        }
-                    case 2: { // TASK.FOLLOWPOINTROUTE
-
-                            /*
-                             * Engine: starts
-                             * Driver: JUMPS OUT
-                             * Flys properly: no
-                             * Dropping: -
-                             */
-
-                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
-
-                            suspects[ii].Tasks.FollowPointRoute(flyRoute, flySpeed);
-
-                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
-
-                            break;
-                        }
-                    case 3: { // TASK.GOFORWARDSTRAIGHT
-
-                            /*
-                             * Engine: starts
-                             * Driver: stays
-                             * Flys properly: no
-                             * Dropping: low variance, straight
-                             */
-
-                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
-
-                            suspects[ii].Tasks.PerformDrivingManeuver(VehicleManeuver.GoForwardStraight);
-
-                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
-
-                            break;
-                        }
-                }
-
-                Game.LogTrivial("[FireyCallouts][Debug] ## " + jj.ToString());
-
-                if (ii == 7) {
-                    ll += 1;
-
-                    for (int xx = 0; xx < spawnPoints.Count(); xx++) {
-                        spawnPoints[xx].Y += 50;
-                    }
-                }
-
-                suspects[kk].IsPersistent = true;
-                suspects[kk].BlockPermanentEvents = true;
-
-                Game.LogTrivial("[FireyCallouts][Debug] $$ " + jj.ToString());
-
-                suspectVehicles[kk].IsPersistent = true;
-                suspectVehicles[kk].IsPositionFrozen = true;
-
-                Game.LogTrivial("[FireyCallouts][Debug] %% " + jj.ToString());
-            }
 
             /*
 
@@ -212,6 +85,8 @@ namespace FireyCallouts.Callouts {
 
         public override bool OnCalloutAccepted() {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'PlaneTesting' callout.");
+
+            this.SpawnPlanes();
 
             // Show route for player
             suspectBlip = suspectVehicles[0].AttachBlip();
@@ -265,7 +140,7 @@ namespace FireyCallouts.Callouts {
 
 
                 if (Game.LocalPlayer.Character.IsDead) End();
-                if (Game.IsKeyDown(System.Windows.Forms.Keys.Delete)) End();
+                if (Game.IsKeyDown(Initialization.endKey)) End();
             }, "PlaneTesting [FireyCallouts]");
         }
 
@@ -283,6 +158,135 @@ namespace FireyCallouts.Callouts {
 
             base.End();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'PlaneTesting' callout.");
+        }
+
+        public void SpawnPlanes() {
+
+            int jj, kk, ll;
+            int testGroups = 8;
+            Vector3 spawnPoint;
+            string planeModel;
+
+            ll = 0;
+            planeModel = planeModels[0];
+
+            for (int ii = 0; ii < testGroups; ii++) {
+                kk = ii + (ll * testGroups);
+
+                jj = ii % (testGroups / 2);
+
+                spawnPoint = spawnPoints[ii];
+
+                Game.LogTrivial("[FireyCallouts][Debug]" + ii.ToString());
+
+                // Initialise vehicle
+                suspectVehicles.Add(new Vehicle(planeModel, spawnPoint));
+
+                Game.LogTrivial("[FireyCallouts][Debug] xx " + jj.ToString());
+
+                // Initialise ped
+                suspects.Add(suspectVehicles[kk].CreateRandomDriver());
+
+                suspectVehicles[kk].Face(landPoint);
+
+                /* Model: velum
+                 * 
+                 * Height = approx. 108f
+                 * Same results for 0, 1 and 3; Jumps out for 2!
+                 * 
+                 * Height = 300f / 600f
+                 * 1 & 3 gliding, 0 falling
+                 * 
+                 */
+
+                switch (jj) {
+                    case 0: { // TASK.LANDPLANE
+
+                            /*
+                             * THIS <--------------------------------------------------------------------------------------------
+                             */
+
+                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
+
+                            suspects[kk].Tasks.LandPlane(suspectVehicles[kk], spawnPoint, landPoint);
+
+                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
+                            break;
+                        }
+                    case 1: { // TASK.CRUISEWITHVEHICLE
+
+                            /*
+                             * Engine: starts
+                             * Driver: stays
+                             * Flys properly: no
+                             * Dropping: low variance, straight
+                             */
+
+                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
+
+                            suspects[kk].Tasks.CruiseWithVehicle(suspectVehicles[kk], flySpeed, VehicleDrivingFlags.IgnorePathFinding);
+
+                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
+
+                            break;
+                        }
+                    case 2: { // TASK.FOLLOWPOINTROUTE
+
+                            /*
+                             * Engine: starts
+                             * Driver: JUMPS OUT
+                             * Flys properly: no
+                             * Dropping: -
+                             */
+
+                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
+
+                            suspects[kk].Tasks.FollowPointRoute(flyRoute, flySpeed);
+
+                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
+
+                            break;
+                        }
+                    case 3: { // TASK.GOFORWARDSTRAIGHT
+
+                            /*
+                             * Engine: starts
+                             * Driver: stays
+                             * Flys properly: no
+                             * Dropping: low variance, straight
+                             */
+
+                            Game.LogTrivial("[FireyCallouts][Debug] -- " + jj.ToString());
+
+                            suspects[kk].Tasks.PerformDrivingManeuver(VehicleManeuver.GoForwardStraight);
+
+                            Game.LogTrivial("[FireyCallouts][Debug] == " + jj.ToString());
+
+                            break;
+                        }
+                }
+
+                Game.LogTrivial("[FireyCallouts][Debug] ## " + jj.ToString());
+
+                if (ii == testGroups - 1) {
+                    ll += 1;
+
+                    for (int xx = 0; xx < spawnPoints.Count(); xx++) {
+                        spawnPoints[xx].Y += 50;
+                    }
+                    planeModel = planeModels[ll];
+                }
+
+                suspects[kk].IsPersistent = true;
+                //suspects[kk].BlockPermanentEvents = true;
+
+                Game.LogTrivial("[FireyCallouts][Debug] $$ " + jj.ToString());
+
+                suspectVehicles[kk].IsPersistent = true;
+                //suspectVehicles[kk].IsPositionFrozen = true;
+
+                Game.LogTrivial("[FireyCallouts][Debug] %% " + jj.ToString());
+            }
         }
     }
 }
