@@ -24,7 +24,7 @@ namespace FireyCallouts.Callouts {
         private Vehicle suspectVehicle;
         private Vector3 spawnPoint;
         private Blip locationBlip;
-        private string[] truckModels = new string[] { "mule", "pounder", "biff", "mixer", "mixer2", "rubble", "tiptruck",
+        private readonly string[] truckModels = new string[] { "mule", "pounder", "biff", "mixer", "mixer2", "rubble", "tiptruck",
                                                       "tiptruck2", "trash", "boxville", "benson", "barracks"};
         private bool willExplode = false;
 
@@ -57,6 +57,12 @@ namespace FireyCallouts.Callouts {
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Truck smoking",
+                                     "~w~Several callers report a truck driving around with smoke coming out of the engine. Respond ~r~Code 3");
+
             return base.OnBeforeCalloutDisplayed();
         }
 
@@ -66,6 +72,8 @@ namespace FireyCallouts.Callouts {
             locationBlip = suspectVehicle.AttachBlip();
             locationBlip.Color = Color.Yellow;
             locationBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }

@@ -25,7 +25,7 @@ namespace FireyCallouts.Callouts {
         private Vector3 spawnPoint;
         private Vector3 area;
         private Blip locationBlip;
-        private string[] helicopterModels = new string[] {"frogger", "frogger2", "maverick", "buzzard2"};
+        private readonly string[] helicopterModels = new string[] {"frogger", "frogger2", "maverick", "buzzard2"};
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Helicopter Crash' callout.");
@@ -52,6 +52,12 @@ namespace FireyCallouts.Callouts {
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Helicopter crashing",
+                                     "~w~Air traffic control has lost connection to a helicopter. They may have crashed. Respond ~r~Code 3");
+
             return base.OnBeforeCalloutDisplayed();
         }
 
@@ -60,9 +66,12 @@ namespace FireyCallouts.Callouts {
 
             // Show route for player
             area = spawnPoint.Around2D(1f, 2f);
-            locationBlip = new Blip(area, 40f);
-            locationBlip.Color = Color.Yellow;
+            locationBlip = new Blip(area, 40f) {
+                Color = Color.Yellow
+            };
             locationBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }

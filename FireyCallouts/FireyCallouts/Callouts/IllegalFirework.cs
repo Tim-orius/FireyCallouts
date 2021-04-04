@@ -61,6 +61,12 @@ namespace FireyCallouts.Callouts {
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Illegal fireworks",
+                                     "~w~A caller reported a person shooting with a firework launcher. Respond ~r~Code 3");
+
             return base.OnBeforeCalloutDisplayed();
         }
 
@@ -68,9 +74,12 @@ namespace FireyCallouts.Callouts {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Illegal Firework' callout.");
 
             area = spawnPoint.Around2D(1f, 2f);
-            locationBlip = new Blip(area, 40f);
-            locationBlip.Color = Color.Yellow;
+            locationBlip = new Blip(area, 40f) {
+                Color = Color.Yellow
+            };
             locationBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }

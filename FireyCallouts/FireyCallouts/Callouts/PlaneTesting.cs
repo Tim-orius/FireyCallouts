@@ -50,7 +50,7 @@ namespace FireyCallouts.Callouts {
             ShowCalloutAreaBlipBeforeAccepting(spawnPoints[0], 30f);
             AddMinimumDistanceCheck(40f, spawnPoints[0]);
 
-            CalloutMessage = "Plane Testing; NO REGULAR CALLOUT; FOR TESTING PURPOSES!";
+            CalloutMessage = "Plane Testing";
             CalloutPosition = spawnPoints[0];
 
             /*
@@ -79,6 +79,13 @@ namespace FireyCallouts.Callouts {
             }
 
             */
+
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Plane Testing",
+                                     "~w~A testing callout to test the behavior of planes. This is no normal callout. " +
+                                     "~r~Do not accept this callout if you didn't select for it to appear!");
 
             return base.OnBeforeCalloutDisplayed();
         }

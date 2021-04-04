@@ -39,12 +39,14 @@ namespace FireyCallouts.Callouts {
         private LHandle pursuit;
         private bool pursuitCreated = false;
 
-        private string[] weaponList = new string[] { "weapon_flaregun", "weapon_molotov", "weapon_petrolcan" };
+        private readonly string[] weaponList = new string[] { "weapon_flaregun", "weapon_molotov", "weapon_petrolcan" };
         private uint fire;
         private List<uint> fireList = new List<uint>();
         private bool endKeyPressed = false;
 
         private List<Tuple<float, float>> mbMatrix = new List<Tuple<float, float>>();
+
+        private List<Vehicle> emergencyVehicles = new List<Vehicle>();
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Structural Fire' callout.");
@@ -146,6 +148,12 @@ namespace FireyCallouts.Callouts {
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Structur on fire",
+                                     "~w~Someone reported a strcutrual fire. Respond ~r~Code 3");
+
             return base.OnBeforeCalloutDisplayed();
         }
 
@@ -161,6 +169,11 @@ namespace FireyCallouts.Callouts {
                 //NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
             }
 
+            // Remove emergency services
+            foreach (Vehicle ev in emergencyVehicles) {
+                if (ev.Exists()) { ev.Delete(); }
+            }
+
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Structural Fire' callout.");
             return false;
         }
@@ -168,10 +181,16 @@ namespace FireyCallouts.Callouts {
         public override bool OnCalloutAccepted() {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Structural Fire' callout.");
 
+            int emx;
+            Vehicle emVehicle;
+
             area = spawnPoint.Around2D(1f, 2f);
-            locationBlip = new Blip(area, 40f);
-            locationBlip.Color = Color.Yellow;
+            locationBlip = new Blip(area, 40f) {
+                Color = Color.Yellow
+            };
             locationBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }
@@ -186,6 +205,11 @@ namespace FireyCallouts.Callouts {
             foreach (uint f in fireList) {
                 NativeFunction.Natives.RemoveScriptFire(f);
                 //NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
+            }
+
+            // Remove emergency services
+            foreach (Vehicle ev in emergencyVehicles) {
+                if (ev.Exists()) { ev.Delete(); }
             }
 
             base.OnCalloutNotAccepted();
@@ -219,6 +243,7 @@ namespace FireyCallouts.Callouts {
                 } else {
                     if (locationBlip.Exists() && locationBlip.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                         if (locationBlip.Exists()) locationBlip.Delete();
+                        //CallBackup();
                         GameFiber.Wait(2000);
                     }
                 }
@@ -244,10 +269,51 @@ namespace FireyCallouts.Callouts {
                 }
             }
 
+            /*
+            // Remove emergency services
+            foreach (Vehicle ev in emergencyVehicles) {
+                if (ev.Exists()) { ev.Dismiss(); }
+            }
+            */
+
             Functions.PlayScannerAudio("WE_ARE_CODE_4");
 
             base.End();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Structural Fire' callout.");
+        }
+
+        public void CallBackup() {
+            Game.LogTrivial("[FireyCallouts][Log] Spawning other emergency vehicles (Backup).");
+
+            int emx;
+            Vehicle emVehicle;
+
+            for (int em = 0; em < 7; em++) {
+                emx = em % 3;
+                switch (emx) {
+                    case 0: {
+                            // Call Fire dept
+                            emVehicle = Functions.RequestBackup(spawnPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.LocalUnit);
+                            break;
+                        }
+                    case 1: {
+                            // Call ambulance
+                            emVehicle = Functions.RequestBackup(spawnPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.Firetruck);
+                            break;
+                        }
+                    case 2: {
+                            // Call ambulance
+                            emVehicle = Functions.RequestBackup(spawnPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.Ambulance);
+                            break;
+                        }
+                    default: {
+                            // Call Fire dept
+                            emVehicle = Functions.RequestBackup(spawnPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.Firetruck);
+                            break;
+                        }
+                }
+                emergencyVehicles.Add(emVehicle);
+            }
         }
 
     }

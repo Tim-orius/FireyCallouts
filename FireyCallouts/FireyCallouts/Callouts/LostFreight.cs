@@ -47,7 +47,13 @@ namespace FireyCallouts.Callouts {
             suspect.BlockPermanentEvents = true;
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
-            Functions.PlayScannerAudio("UNITS_RESPOND_CODE_02");
+            Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
+
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Lost freight",
+                                     "~w~A tow truck has lost its freight. Respond ~r~Code 3");
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -60,6 +66,8 @@ namespace FireyCallouts.Callouts {
             suspectBlip.IsFriendly = true;
             suspectBlip.Color = Color.Yellow;
             suspectBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }

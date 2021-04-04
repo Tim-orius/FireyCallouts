@@ -97,10 +97,11 @@ namespace FireyCallouts.Callouts {
 
             if (Utils.gamemode == Utils.Gamemodes.Pol) {
                 // create Suspect
-                suspect = new Ped(spawnPoint.Around(1f));
-                suspect.IsFireProof = true;
-                suspect.IsPersistent = true;
-                suspect.BlockPermanentEvents = true;
+                suspect = new Ped(spawnPoint.Around(1f)) {
+                    IsFireProof = true,
+                    IsPersistent = true,
+                    BlockPermanentEvents = true
+                };
                 suspect.Tasks.Wander();
 
                 // Give suspect random weapon (from the above list)
@@ -117,6 +118,12 @@ namespace FireyCallouts.Callouts {
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
+
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Dumpster on fire",
+                                     "~w~Someone called on a burning dumpster. They also witnessed a suspicious person walking away from the location. Respond ~r~Code 3");
 
             return base.OnBeforeCalloutDisplayed();
         }
@@ -141,9 +148,12 @@ namespace FireyCallouts.Callouts {
             Game.LogTrivial("[FireyCallouts][Log] Accepted 'Dumpster Fire' callout.");
 
             area = spawnPoint.Around2D(1f, 2f);
-            locationBlip = new Blip(area, 40f);
-            locationBlip.Color = Color.Yellow;
+            locationBlip = new Blip(area, 40f) {
+                Color = Color.Yellow
+            };
             locationBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }

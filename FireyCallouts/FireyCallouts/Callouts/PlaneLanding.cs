@@ -26,20 +26,20 @@ namespace FireyCallouts.Callouts {
         private Vector3 landPoint;
         private Blip suspectBlip;
         private List<Vector3> landLocations = new List<Vector3>() { new Vector3(1772.492f, 2088.625f, 66.50783f), // Near prison
-                                                                    new Vector3(77.06483f, -1230.351f, 37.81571f)}; // Highway-bridge right south of simeons
+                                                                    new Vector3(208.9535f, -1227.534f, 38.82745f)}; // Highway-bridge right south of simeons
 
         private List<Vector3> spawnLocations = new List<Vector3>() { new Vector3(1891.882f, 3130.54f, 308.6497f), // Straight line north of landing point
-                                                                     new Vector3(-948.3423f, -1253.808546f, 382.55003f)}; // Straight line west of landing point
+                                                                     new Vector3(-301.3139f, -1236.333f, 382.55003f)}; // Straight line west of landing point
 
         private readonly float flySpeed = 80f;
         private int seat = 1;
         private int landingSituation;
 
-        private string[] planeModels = new string[] { "velum", "velum2", "vestra", "dodo", "duster", "mammatus" };
+        private readonly string[] planeModels = new string[] { "velum", "velum2", "vestra", "dodo", "duster", "mammatus" };
         private bool willCrash = false;
+        private bool distanceCheck = false;
 
         private List<Vehicle> emergencyVehicles = new List<Vehicle>();
-        private List<Ped[]> emergencyPeds = new List<Ped[]>();
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Plane Landing' callout.");
@@ -57,14 +57,15 @@ namespace FireyCallouts.Callouts {
                 }
             }
 
-            if (possibleLandLocations.Count < 1) {
+            int landLocationsCount = possibleLandLocations.Count;
+
+            if (landLocationsCount < 1) {
                 Game.LogTrivial("[FireyCallouts][Log] Distance to callout scene point too far.");
                 OnCalloutNotAccepted();
                 return false;
             }
-            
 
-            int locationDecision = mrRandom.Next(0, landLocations.Count);
+            int locationDecision = mrRandom.Next(0, landLocationsCount);
             int decision;
 
             landPoint = possibleLandLocations[locationDecision];
@@ -80,10 +81,11 @@ namespace FireyCallouts.Callouts {
 
             // Initialise vehicle
             decision = mrRandom.Next(0, planeModels.Length);
-            suspectVehicle = new Vehicle(planeModels[decision], spawnPoint);
-            suspectVehicle.IsPersistent = true;
+            suspectVehicle = new Vehicle(planeModels[decision], spawnPoint) {
+                IsPersistent = true,
+                IsEngineOn = true
+            };
             suspectVehicle.Face(landPoint);
-            suspectVehicle.IsEngineOn = true;
 
             // Initialise ped
             suspect = suspectVehicle.CreateRandomDriver();
@@ -103,6 +105,12 @@ namespace FireyCallouts.Callouts {
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
 
+            Game.DisplayNotification("web_lossantospolicedept",
+                                     "web_lossantospolicedept",
+                                     "~y~FireyCallouts",
+                                     "~r~Plane landing",
+                                     "~w~A plane has to perform an emegrency landing on a highway. Respond ~r~Code 3");
+
             return base.OnBeforeCalloutDisplayed();
         }
 
@@ -113,6 +121,8 @@ namespace FireyCallouts.Callouts {
             suspectBlip = suspectVehicle.AttachBlip();
             suspectBlip.Color = Color.Yellow;
             suspectBlip.EnableRoute(Color.Yellow);
+
+            Game.DisplayHelp("Press " + Initialization.endKey.ToString() + " to end the callout at any time.");
 
             return base.OnCalloutAccepted();
         }
@@ -129,13 +139,6 @@ namespace FireyCallouts.Callouts {
             foreach (Vehicle ev in emergencyVehicles) {
                 if (ev.Exists()) { ev.Delete(); }
             }
-            foreach (Ped[] epl in emergencyPeds) {
-                if (epl.Length > 0) {
-                    foreach (Ped ep in epl) {
-                        if (ep.Exists()) { ep.Delete(); }
-                    }
-                }
-            }
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Plane Landing' callout.");
@@ -148,9 +151,13 @@ namespace FireyCallouts.Callouts {
             GameFiber.StartNew(delegate {
 
                 // Distance plane - player is < 40
-                if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
+                if (suspect.Exists() && suspectVehicle.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f && !distanceCheck) {
                     suspect.KeepTasks = true;
+                    suspectVehicle.EngineHealth = 1;
+                    //CallBackup();
                     //if (suspectBlip.Exists()) suspectBlip.Delete();
+
+                    distanceCheck = true;
                     GameFiber.Wait(2000);
                 }
 
@@ -168,7 +175,6 @@ namespace FireyCallouts.Callouts {
 
                 if (Game.LocalPlayer.Character.IsDead) End();
                 if (Game.IsKeyDown(Initialization.endKey)) End();
-                if (suspect.Exists()) { if (suspect.IsDead) End(); }
                 if (suspect.Exists()) { if (Functions.IsPedArrested(suspect)) End(); }
             }, "PlaneLanding [FireyCallouts]");
         }
@@ -179,21 +185,50 @@ namespace FireyCallouts.Callouts {
             if (suspectVehicle.Exists()) { suspectVehicle.Dismiss(); }
             if (suspectBlip.Exists()) { suspectBlip.Delete(); }
 
+            /*
             foreach (Vehicle ev in emergencyVehicles) {
                 if (ev.Exists()) { ev.Dismiss(); }
             }
-            foreach (Ped[] epl in emergencyPeds) {
-                if (epl.Length > 0) {
-                    foreach (Ped ep in epl) {
-                        if (ep.Exists()) { ep.Dismiss(); }
-                    }
-                }
-            }
+            */
 
             Functions.PlayScannerAudio("WE_ARE_CODE_4");
 
             base.End();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Plane Landing' callout.");
+        }
+
+        public void CallBackup() {
+            Game.LogTrivial("[FireyCallouts][Log] Spawning other emergency vehicles (Backup).");
+
+            int emx;
+            Vehicle emVehicle;
+
+            for (int em = 0; em < 7; em++) { 
+                emx = em % 3;
+                switch (emx) {
+                    case 0: {
+                            // Call Fire dept
+                            emVehicle = Functions.RequestBackup(landPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.LocalUnit);
+                            break;
+                        }
+                    case 1: {
+                            // Call ambulance
+                            emVehicle = Functions.RequestBackup(landPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.Firetruck);
+                            break;
+                        }
+                    case 2: {
+                            // Call ambulance
+                            emVehicle = Functions.RequestBackup(landPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.Ambulance);
+                            break;
+                        }
+                    default: {
+                            // Call Fire dept
+                            emVehicle = Functions.RequestBackup(landPoint, LSPD_First_Response.EBackupResponseType.Code3, LSPD_First_Response.EBackupUnitType.Firetruck);
+                            break;
+                        }
+                }
+                emergencyVehicles.Add(emVehicle);
+            }
         }
     }
 }
