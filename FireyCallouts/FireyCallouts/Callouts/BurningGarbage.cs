@@ -45,6 +45,7 @@ namespace FireyCallouts.Callouts {
 
             int decision;
             float offsetx, offsety, offsetz;
+            Vector3 pedSpawn;
 
             // Check locations around 800f to the player
             List<Vector3> possibleLocations = new List<Vector3>();
@@ -96,8 +97,10 @@ namespace FireyCallouts.Callouts {
             }
 
             if (Utils.gamemode == Utils.Gamemodes.Pol) {
+                pedSpawn = spawnPoint;
+                pedSpawn.Z += 1f;
                 // create Suspect
-                suspect = new Ped(spawnPoint.Around(1f)) {
+                suspect = new Ped(pedSpawn) {
                     IsFireProof = true,
                     IsPersistent = true,
                     BlockPermanentEvents = true

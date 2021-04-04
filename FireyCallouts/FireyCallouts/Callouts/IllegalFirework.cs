@@ -42,16 +42,17 @@ namespace FireyCallouts.Callouts {
             CalloutPosition = spawnPoint;
 
             // Initialise peds
-            suspect = new Ped(spawnPoint.Around(10f));
-            suspect.IsPersistent = true;
-            suspect.BlockPermanentEvents = true;
+            suspect = new Ped(spawnPoint) {
+                IsPersistent = true,
+                BlockPermanentEvents = true
+            };
             suspect.Tasks.Wander();
             // Give weapon to suspect
             suspect.Inventory.GiveNewWeapon(new WeaponAsset("weapon_firework"), 10, true);
             Game.LogTrivial("[FireyCalouts][Debug-log] Firework: Suspect spawned at position " + suspect.Position.ToString());
 
-            dummy1 = new Ped(spawnPoint);
-            dummy2 = new Ped(spawnPoint);
+            dummy1 = new Ped(spawnPoint.Around2D(5f));
+            dummy2 = new Ped(spawnPoint.Around2D(5f));
 
             dummy1.Tasks.Wander();
             dummy2.Tasks.Wander();
