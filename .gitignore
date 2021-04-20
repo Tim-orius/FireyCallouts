@@ -3,6 +3,5 @@ obj
 References
 .vs
 .vscode
-*.csproj
 *.sln
 *.config
