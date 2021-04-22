@@ -24,9 +24,28 @@ namespace FireyCallouts.Callouts {
         private Vehicle suspectVehicle;
         private Vector3 spawnPoint;
         private Blip locationBlip;
+        private LHandle pursuit;
         private readonly string[] truckModels = new string[] { "mule", "pounder", "biff", "mixer", "mixer2", "rubble", "tiptruck",
                                                       "tiptruck2", "trash", "boxville", "benson", "barracks"};
         private bool willExplode = false;
+        private int dialogueCount = 0;
+        private bool suspectDialogueComplete = false;
+        private bool pursuitCreated = false;
+        private bool notificationShown = false;
+        private bool otherNotificationShown = false;
+        private bool madeTruckSmoke = false;
+
+        private List<string[]> dialoguesSuspect = new List<string[]>() { new string[] { "~y~Suspect: ~w~Hello Officer, I am on my way to the workshop.",
+                                                                                        "~y~You: ~w~That's good but it would be better if you had the truck towed.",
+                                                                                        "~y~Suspect: ~w~Okay. Can you call a tow truck please? I have no phone with me."},
+                                                                        new string[] { "~y~Suspect: ~w~Hello Officer.", "~y~You: ~w~Hello. Have you noticed that your truck is smoking under the hood?"},
+                                                                        new string[] { "~y~Suspect: ~w~Oh yes, but that is no problem.", "~y~You: ~w~It sure is a problem. You can't drive with a smoking engine.",
+                                                                                        "~y~Suspect: ~w~Okay okay. Then please call a tow truck for me."},
+                                                                        new string[] { "~y~Suspect: ~w~It's all fine. There is no problem.", "The smoke sure is a problem. The truck needs to be towed.",
+                                                                                       "~y|Suspect: ~w~Fine. I can't call a tow truck though." },
+                                                                        new string[] { "~y~Suspect: ~w~I'm just on my way to the next workshop to fix that." } };
+
+        int selector, dialogueEndChoice, dialoguePoint;
 
         public override bool OnBeforeCalloutDisplayed() {
             Game.LogTrivial("[FireyCallouts][Log] Initialising 'Burning Truck' callout.");
@@ -53,6 +72,10 @@ namespace FireyCallouts.Callouts {
             if (decision == 1) {
                 willExplode = true;
             }
+
+            selector = mrRandom.Next(0, 2);
+            dialogueEndChoice = mrRandom.Next(2, 5);
+            dialoguePoint = selector;
 
             Functions.PlayScannerAudioUsingPosition("ASSISTANCE_REQUIRED IN_OR_ON_POSITION", spawnPoint);
             Functions.PlayScannerAudio("UNITS_RESPOND_CODE_03");
@@ -96,32 +119,71 @@ namespace FireyCallouts.Callouts {
             GameFiber.StartNew(delegate {
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
                     
-                    if (Utils.gamemode == Utils.Gamemodes.Pol) {
+                    if (!notificationShown) {
                         suspect.KeepTasks = true;
                         Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Pol mode notice");
-                    } else {
+
+                        Game.DisplayHelp("Press " + Initialization.dialogueKey.ToString() + " to show dialogues.");
+
+                        notificationShown = true;
+                    } else if (!notificationShown) {
                         suspect.Tasks.PerformDrivingManeuver(suspectVehicle, VehicleManeuver.GoForwardStraightBraking, 100);
                         Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Fire mode notice 1");
+
+                        notificationShown = true;
                     }
 
                     // Make the truck burn
-                    if (suspectVehicle.Exists()) {
+                    if (suspectVehicle.Exists() && !madeTruckSmoke) {
                         suspectVehicle.EngineHealth = 0;
                         Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Now smoking");
                         GameFiber.Wait(5000);
 
-                        if (Utils.gamemode == Utils.Gamemodes.Fire && suspect.Exists()) {
+                        if (suspect.Exists() && !otherNotificationShown) {
+                            otherNotificationShown = true;
                             Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Fire mode notice 2");
                             suspect.Tasks.LeaveVehicle(LeaveVehicleFlags.BailOut);
                         }
 
-                        suspectVehicle.EngineHealth = 1;
+                        if (suspectVehicle.Exists()) suspectVehicle.EngineHealth = 1;
                         GameFiber.Wait(15000);
 
-                        if (willExplode) {
+                        if (willExplode && suspectVehicle.Exists()) {
                             suspectVehicle.Explode(true);
                             willExplode = false;
                             Game.LogTrivial("[FireyCalouts][Debug-log] Truck burning: Explode");
+                        }
+
+                        madeTruckSmoke = true;
+                    }
+                }
+
+                if (!willExplode) {
+                    if (suspect.Exists() && !suspectDialogueComplete && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 11f && suspectVehicle.Velocity == Vector3.Zero) {
+                        if (Game.IsKeyDown(Initialization.dialogueKey)) {
+                            // Story
+                            Game.DisplaySubtitle(dialoguesSuspect[dialoguePoint][dialogueCount]);
+                            dialogueCount++;
+                            GameFiber.Wait(1000);
+
+                            if (dialogueCount == dialoguesSuspect[dialoguePoint].Length) {
+                                // Select ending
+                                if (selector == 1 && dialoguePoint == selector) {
+                                    dialogueCount = 0;
+                                    dialoguePoint = dialogueEndChoice;
+                                } else {
+                                    suspectDialogueComplete = true;
+                                }
+
+                                // Create pursuit if none exists and storyline 4 is chosen
+                                if (suspectDialogueComplete && !pursuitCreated && dialogueEndChoice == 4) {
+                                    pursuit = Functions.CreatePursuit();
+                                    Functions.AddPedToPursuit(pursuit, suspect);
+                                    Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                                    pursuitCreated = true;
+                                    Game.LogTrivial("[FireyCalouts][Debug-log] Pursuit started");
+                                }
+                            }
                         }
                     }
                 }
