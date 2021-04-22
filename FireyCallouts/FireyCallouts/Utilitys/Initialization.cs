@@ -9,8 +9,9 @@ using Rage;
 namespace FireyCallouts.Utilitys {
     internal static class Initialization {
 
-        // Development
+        // Development callouts / tools
         internal static bool develop = false;
+        internal static bool planeTesting = false;
 
         // Callouts
         internal static bool burningTruck = true;
@@ -20,12 +21,12 @@ namespace FireyCallouts.Utilitys {
         internal static bool heliCrash = true;
         internal static bool planeLanding = true;
         internal static bool structuralFire = true;
-
-        // in development
-        internal static bool planeTesting = false;
+        internal static bool campfire = true;
+        internal static bool smokeDetected = false;
 
         // Controls & other settings
         internal static Keys endKey = Keys.Delete;
+        internal static Keys dialogueKey = Keys.Y;
 
         internal static void Initalize() {
             string pathToFile = "Plugins/LSPDFR/FireyCallouts.ini";
@@ -33,26 +34,19 @@ namespace FireyCallouts.Utilitys {
             ini.Create();
 
             // Controls
-            Utils.gamemode = ini.ReadEnum<Utils.Gamemodes>("Controls", "gamemode", Utils.Gamemodes.Pol);
             endKey = ini.ReadEnum("Controls", "endKey", Keys.Delete);
+            dialogueKey = ini.ReadEnum("Controls", "dialogueKey", Keys.Y);
 
             // Callouts
-            // Not specific
             burningTruck = ini.ReadBoolean("Callouts", "burningTruck", true);
             burningGarbage = ini.ReadBoolean("Callouts", "burningGarbage", true);
             lostFreight = ini.ReadBoolean("Callouts", "lostFreight", true);
             heliCrash = ini.ReadBoolean("Callouts", "heliCrash", true);
             planeLanding = ini.ReadBoolean("Callouts", "planeLanding", true);
-            structuralFire = ini.ReadBoolean("Callouts", "structuralFire", true);
-
-            // Pol specific
             illegalFirework = ini.ReadBoolean("Callouts", "illegalFirework", true);
-
-            // Fire specific
-            // (None)
-
-            // Development
-            develop = ini.ReadBoolean("Development", "develop", false);
+            structuralFire = ini.ReadBoolean("Callouts", "structuralFire", true);
+            campfire = ini.ReadBoolean("Callouts", "campfire", true);
+            //smokeDetected = ini.ReadBoolean("Callouts", "smokeDetected", false); 
 
             Game.LogTrivial("[FireyCallouts][Init] successfully initialized");
 
