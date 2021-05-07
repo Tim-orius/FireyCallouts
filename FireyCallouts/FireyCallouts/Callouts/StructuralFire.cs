@@ -28,7 +28,8 @@ namespace FireyCallouts.Callouts {
                                                                                     new Vector3(-56.92595f, -1752.177f, 29.42101f), // pos4
                                                                                     new Vector3(-39.99396f, -1751.581f, 29.42101f), // pos5
                                                                                     new Vector3(-47.98798f, -1761.382f, 29.42101f), // posA
-                                                                                    new Vector3(-59.57947f, -1751.757f, 29.42101f)} // posB
+                                                                                    new Vector3(-59.57947f, -1751.757f, 29.42101f), // posB
+                                                                                  }
                                                                     };
         private List<Tuple<int,int>[]> calculationMatrix = new List<Tuple<int, int>[]>() { new Tuple<int, int>[] { Tuple.Create(1, 2), Tuple.Create(1, 4),
                                                                                                                    Tuple.Create(2, 3), Tuple.Create(3, 4)}
@@ -58,19 +59,21 @@ namespace FireyCallouts.Callouts {
 
             // Check locations around 800f to the player
             List<Vector3[]> possibleLocations = new List<Vector3[]>();
+            
             /*
             foreach (Vector3[] lo in locations) {
                 Vector3 l = lo[0];
-                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f || true) {
+                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f) {
                     possibleLocations.Add(lo);
                 }
             }
 
             if (possibleLocations.Count < 1) {
-                Game.LogTrivial("[FireyCallouts][Log] Abort 'Dumpster Fire' callout. player too far away from all locations.");
                 return AbortCallout();
             }
             */
+
+            // DELETE WHEN UNCOMMENTED THE ABOVE STATEMENTS!!! ---------------------------------------------------------------------------
             possibleLocations = locations;
 
             // Random location for the fire
@@ -158,7 +161,7 @@ namespace FireyCallouts.Callouts {
         }
 
         public bool AbortCallout() {
-            Game.LogTrivial("[FireyCallouts][Log] Clean up 'Structural Fire' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Abort 'Structural Fire' callout. Locations too far away (> 800).");
 
             // Clean up if not accepted
             if (suspect.Exists()) suspect.Delete();

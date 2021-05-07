@@ -25,7 +25,7 @@ namespace FireyCallouts.Callouts {
         private Vehicle suspectVehicle;
         private Vehicle lostVehicle;
         private Vector3 spawnPoint;
-        private Blip suspectBlip, witnessBlip;
+        private Blip suspectBlip, witnessBlip, lostVehicleBlip;
         private LHandle pursuit;
 
         private bool pursuitCreated = false;
@@ -81,6 +81,8 @@ namespace FireyCallouts.Callouts {
         private bool notificationShown = false;
         private bool witnessInfo = false;
         private bool updateLocations = false;
+        private bool timeBuffer = false;
+        private bool lostVehicleBlipped = false;
         
 
         public override bool OnBeforeCalloutDisplayed() {
@@ -101,6 +103,11 @@ namespace FireyCallouts.Callouts {
             lostVehicle = new Vehicle("Tractor", spawnPoint.Around(10f));
             lostVehicle.IsPersistent = true;
 
+            /*
+            suspectVehicle.TowVehicle(lostVehicle, true);
+            suspectVehicle.DetachTowedVehicle();
+            */
+
             suspect = suspectVehicle.CreateRandomDriver();
             suspect.IsPersistent = true;
             suspect.BlockPermanentEvents = true;
@@ -110,14 +117,14 @@ namespace FireyCallouts.Callouts {
             if (decision < 2) {
                 suspect.Tasks.CruiseWithVehicle(suspectVehicle, 50f, VehicleDrivingFlags.Emergency);
             } else if (decision < 4) {
-                suspect.Tasks.CruiseWithVehicle(suspectVehicle, 30f, VehicleDrivingFlags.Normal);
-            } else if (decision < 6) {
+                suspect.Tasks.CruiseWithVehicle(suspectVehicle, 20f, VehicleDrivingFlags.None);
+            } else {
                 suspect.Tasks.LeaveVehicle(suspectVehicle, LeaveVehicleFlags.LeaveDoorOpen);
             }
 
             if (decision % 2 == 0) {
                 witnessThere = true;
-                witness = new Ped(spawnPoint.Around(5f));
+                witness = new Ped(lostVehicle.Position.Around(5f));
             }
 
             selector = mrRandom.Next(0, 2);
@@ -166,6 +173,7 @@ namespace FireyCallouts.Callouts {
             if (lostVehicle.Exists()) lostVehicle.Delete();
             if (suspectBlip.Exists()) suspectBlip.Delete();
             if (witnessBlip.Exists()) witnessBlip.Delete();
+            if (lostVehicleBlip.Exists()) { lostVehicleBlip.Delete(); }
 
             base.OnCalloutNotAccepted();
             Game.LogTrivial("[FireyCallouts][Log] Cleaned up 'Lost Freight' callout.");
@@ -180,6 +188,12 @@ namespace FireyCallouts.Callouts {
                     suspect.KeepTasks = true;
                     if (suspectBlip.Exists() && !notificationShown) suspectBlip.Delete();
                     GameFiber.Wait(2000);
+
+                    if (!lostVehicleBlipped) {
+                        lostVehicleBlip = lostVehicle.AttachBlip();
+                        lostVehicleBlip.Color = Color.Green;
+                        lostVehicleBlipped = true;
+                    }
 
                     if (!notificationShown) {
                         Game.DisplayHelp("Press " + Initialization.dialogueKey.ToString() + " to show dialogues.");
@@ -246,8 +260,9 @@ namespace FireyCallouts.Callouts {
 
                 }
 
-                if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 4f && !suspectDialogueComplete 
-                    && decision < 6 && suspectVehicle.Velocity == Vector3.Zero) {
+                if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 8f && !suspectDialogueComplete && 
+                    (!witness.Exists() || witness.Exists() && witness.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) 
+                                         > suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)))) {
                     // Story driver (suspect)
                     if (Game.IsKeyDown(Initialization.dialogueKey) && !suspectDialogueComplete && decision >= 2) {
                         if (decision < 4) {
@@ -270,14 +285,19 @@ namespace FireyCallouts.Callouts {
                             }
                         }
                     } else {
-                        suspectDialogueComplete = true;
+                        if (decision < 2) {
+                            suspectDialogueComplete = true;
+                        }
                     }
 
-                } else if (witness.Exists() && witness.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 4f && !witnessDialogueComplete && notificationShown && decision < 6) {
+                } else if (witness.Exists() && witness.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 8f && !witnessDialogueComplete && notificationShown && 
+                          (!suspect.Exists() || suspect.Exists() && witness.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront))
+                                                < suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)))) {
                     // Story witness
                     if (Game.IsKeyDown(Initialization.dialogueKey) && !witnessDialogueComplete) {
                         Game.DisplaySubtitle(dialoguesWitness[storyDecisionWitness][dialogueCountWitness]);
                         dialogueCountWitness++;
+                        Game.LogTrivial("[FireyCallouts][Debug-log] Dialogue Counter: " + dialogueCountWitness.ToString() + " Dialogue: " + dialoguesWitness[storyDecisionWitness][dialogueCountWitness]);
                         GameFiber.Wait(1000);
 
                         if (dialogueCountWitness >= dialoguesWitness[storyDecisionWitness].Length) {
@@ -301,9 +321,10 @@ namespace FireyCallouts.Callouts {
                     }
                 }
 
-                if (suspect.Exists() && updateLocations) {
+                if (suspect.Exists() && updateLocations && !pursuitCreated && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) > 40f && !timeBuffer) {
+                    timeBuffer = true;
                     if (suspectBlip.Exists()) { suspectBlip.Delete(); }
-                    suspectBlip = new Blip(suspect.Position, 30f) {
+                    suspectBlip = new Blip(suspect.Position, 60f) {
                         Color = Color.Yellow
                     };
                     suspectBlip.EnableRoute(Color.Yellow);
@@ -312,6 +333,7 @@ namespace FireyCallouts.Callouts {
                         GameFiber.Wait(10000);
                     }
                     GameFiber.Wait(5000);
+                    timeBuffer = false;
                 }
 
                 if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 20f && decision < 2 && notificationShown && !pursuitCreated) {
@@ -344,6 +366,7 @@ namespace FireyCallouts.Callouts {
             if (lostVehicle.Exists()) { lostVehicle.Dismiss(); }
             if (suspectBlip.Exists()) { suspectBlip.Delete(); }
             if (witnessBlip.Exists()) witnessBlip.Delete();
+            if (lostVehicleBlip.Exists()) { lostVehicleBlip.Delete(); }
 
             Functions.PlayScannerAudio("WE_ARE_CODE_4");
 

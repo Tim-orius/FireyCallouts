@@ -73,7 +73,7 @@ namespace FireyCallouts.Callouts {
             int fireAmplify;
             float offsetx, offsety, offsetz;
 
-            decision = mrRandom.Next(0, 10);
+            decision = mrRandom.Next(0, 8);
             int makeFire = mrRandom.Next(0, 10);
             int hasWeapons = mrRandom.Next(0, 4);
 
@@ -89,8 +89,6 @@ namespace FireyCallouts.Callouts {
             if (possibleLocations.Count < 1) {
                 return AbortCallout();
             }
-            
-            possibleLocations = locations;
 
             // Random location for the fire
             int chosenLocation = mrRandom.Next(0, possibleLocations.Count);
@@ -101,6 +99,9 @@ namespace FireyCallouts.Callouts {
 
             CalloutMessage = "Campfire";
             CalloutPosition = spawnPoint;
+
+            // Lower spawn point due to the wood spawning in mid air
+            spawnPoint.Z -= 2;
 
             fireWood = new Rage.Object("prop_fncwood_16g", spawnPoint);
             fireWood.MakePersistent();

@@ -21,7 +21,7 @@ namespace FireyCallouts.Callouts {
         private Random mrRandom = new Random();
 
         private Ped suspect;
-        private Ped dummy1, dummy2;
+        private Ped witness1, witness2;
         private Vector3 spawnPoint;
         private Vector3 area;
         private Blip locationBlip;
@@ -51,11 +51,11 @@ namespace FireyCallouts.Callouts {
             suspect.Inventory.GiveNewWeapon(new WeaponAsset("weapon_firework"), 10, true);
             Game.LogTrivial("[FireyCalouts][Debug-log] Firework: Suspect spawned at position " + suspect.Position.ToString());
 
-            dummy1 = new Ped(spawnPoint.Around2D(5f));
-            dummy2 = new Ped(spawnPoint.Around2D(5f));
+            witness1 = new Ped(spawnPoint.Around2D(10f));
+            witness2 = new Ped(spawnPoint.Around2D(10f));
 
-            dummy1.Tasks.Wander();
-            dummy2.Tasks.Wander();
+            witness1.Tasks.Wander();
+            witness2.Tasks.Wander();
 
             decision = mrRandom.Next(0,2);
 
@@ -89,8 +89,8 @@ namespace FireyCallouts.Callouts {
             Game.LogTrivial("[FireyCallouts][Log] Not accepted 'Illegal Firework' callout.");
 
             if (suspect.Exists()) suspect.Delete();
-            if (dummy1.Exists()) dummy1.Delete();
-            if (dummy2.Exists()) dummy2.Delete();
+            if (witness1.Exists()) witness1.Delete();
+            if (witness2.Exists()) witness2.Delete();
             if (locationBlip.Exists()) locationBlip.Delete();
 
             base.OnCalloutNotAccepted();
@@ -112,8 +112,8 @@ namespace FireyCallouts.Callouts {
                         new RelationshipGroup("attacker");
                         new RelationshipGroup("victim");
                         suspect.RelationshipGroup = "attacker";
-                        dummy1.RelationshipGroup = "victim";
-                        dummy2.RelationshipGroup = "victim";
+                        witness1.RelationshipGroup = "victim";
+                        witness2.RelationshipGroup = "victim";
 
                         suspect.KeepTasks = true;
 
@@ -155,8 +155,8 @@ namespace FireyCallouts.Callouts {
         public override void End() {
 
             if (suspect.Exists()) { suspect.Dismiss(); }
-            if (dummy1.Exists()) dummy1.Dismiss();
-            if (dummy2.Exists()) dummy2.Dismiss();
+            if (witness1.Exists()) witness1.Dismiss();
+            if (witness2.Exists()) witness2.Dismiss();
             if (locationBlip.Exists()) { locationBlip.Delete(); }
 
             Functions.PlayScannerAudio("WE_ARE_CODE_FOUR");

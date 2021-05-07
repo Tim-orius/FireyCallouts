@@ -90,32 +90,30 @@ namespace FireyCallouts.Callouts {
                 }
 
                 // These fires do not extinguish by themselves.
-                //fire = NativeFunction.CallByName<uint>("START_SCRIPT_FIRE", spawnPoint.X + offsetx, spawnPoint.Y + offsety + 0.1f, spawnPoint.Z + offsetz, 25, true);
                 fire = NativeFunction.Natives.StartScriptFire<uint>(spawnPoint.X + offsetx, spawnPoint.Y + offsety, spawnPoint.Z + offsetz, 25, true);
                 
                 fireList.Add(fire);
             }
 
-            if (Utils.gamemode == Utils.Gamemodes.Pol) {
-                pedSpawn = spawnPoint;
-                pedSpawn.Z += 1f;
-                // create Suspect
-                suspect = new Ped(pedSpawn) {
-                    IsFireProof = true,
-                    IsPersistent = true,
-                    BlockPermanentEvents = true
-                };
-                suspect.Tasks.Wander();
+            
+            pedSpawn = spawnPoint;
+            pedSpawn.Z += 1f;
+            // create Suspect
+            suspect = new Ped(pedSpawn) {
+                IsFireProof = true,
+                IsPersistent = true,
+                BlockPermanentEvents = true
+            };
+            suspect.Tasks.Wander();
 
-                // Give suspect random weapon (from the above list)
-                decision = mrRandom.Next(0, 3);
-                if (decision > 0) {
-                    decision = mrRandom.Next(0, weaponList.Length);
-                    if (decision == 2) {
-                        suspect.Inventory.GiveNewWeapon(new WeaponAsset(weaponList[decision]), 1, true);
-                    } else {
-                        suspect.Inventory.GiveNewWeapon(new WeaponAsset(weaponList[decision]), 16, true);
-                    }
+            // Give suspect random weapon (from the above list)
+            decision = mrRandom.Next(0, 3);
+            if (decision > 0) {
+                decision = mrRandom.Next(0, weaponList.Length);
+                if (decision == 2) {
+                    suspect.Inventory.GiveNewWeapon(new WeaponAsset(weaponList[decision]), 1, true);
+                } else {
+                    suspect.Inventory.GiveNewWeapon(new WeaponAsset(weaponList[decision]), 16, true);
                 }
             }
 
@@ -182,26 +180,19 @@ namespace FireyCallouts.Callouts {
 
             GameFiber.StartNew(delegate {
 
-                if (Utils.gamemode == Utils.Gamemodes.Pol) {
-                    if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
-                        suspect.KeepTasks = true;
-                        if (locationBlip.Exists()) locationBlip.Delete();
-                        GameFiber.Wait(2000);
-                    }
+                if (suspect.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
+                    suspect.KeepTasks = true;
+                    if (locationBlip.Exists()) locationBlip.Delete();
+                    GameFiber.Wait(2000);
+                }
                 
-                    NativeFunction.CallByName<uint>("TASK_REACT_AND_FLEE_PED", suspect);
+                NativeFunction.CallByName<uint>("TASK_REACT_AND_FLEE_PED", suspect);
 
-                    if(!pursuitCreated && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f){
-                        pursuit = Functions.CreatePursuit();
-                        Functions.AddPedToPursuit(pursuit, suspect);
-                        Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                        pursuitCreated = true;
-                    }
-                } else {
-                    if (locationBlip.Exists() && locationBlip.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f) {
-                        if (locationBlip.Exists()) locationBlip.Delete();
-                        GameFiber.Wait(2000);
-                    }
+                if(!pursuitCreated && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f){
+                    pursuit = Functions.CreatePursuit();
+                    Functions.AddPedToPursuit(pursuit, suspect);
+                    Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                    pursuitCreated = true;
                 }
 
                 if (Game.LocalPlayer.Character.IsDead) End();
