@@ -31,14 +31,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LSPD First Response, Version=0.4.7688.2267, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="LSPD First Response, Version=0.4.7874.38392, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\dependecies\LSPD First Response.dll</HintPath>
     </Reference>
     <Reference Include="RAGENativeUI">
       <HintPath>..\..\..\dependecies\RAGENativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="RagePluginHookSDK">
+    <Reference Include="RagePluginHookSDK, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\dependecies\RagePluginHookSDK.dll</HintPath>
     </Reference>
     <Reference Include="System" />

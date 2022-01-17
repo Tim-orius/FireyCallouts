@@ -51,31 +51,27 @@ namespace FireyCallouts {
             if (Initialization.develop) {
                 Game.LogTrivial("[FireyCallouts] Developer mode enabled. Register all callouts.");
                 // Developer mode
-                Functions.RegisterCallout(typeof(Callouts.PlaneTesting));
-                Functions.RegisterCallout(typeof(Callouts.IllegalFirework));
-                Functions.RegisterCallout(typeof(Callouts.LostFreight));
-                Functions.RegisterCallout(typeof(Callouts.HeliCrash));
+                Functions.RegisterCallout(typeof(Callouts.DumpsterFire));
                 Functions.RegisterCallout(typeof(Callouts.BurningTruck));
-                Functions.RegisterCallout(typeof(Callouts.StructuralFire));
+                Functions.RegisterCallout(typeof(Callouts.Campfire));
+                Functions.RegisterCallout(typeof(Callouts.IllegalFirework));
+                Functions.RegisterCallout(typeof(Callouts.HeliCrash));
+                Functions.RegisterCallout(typeof(Callouts.LostFreight));
                 Functions.RegisterCallout(typeof(Callouts.PlaneLanding));
+                Functions.RegisterCallout(typeof(Callouts.PlaneTesting));
+                Functions.RegisterCallout(typeof(Callouts.SmokeDetected));
+                Functions.RegisterCallout(typeof(Callouts.StructuralFire));
 
             } else {
 
-                if (Utils.gamemode == Utils.Gamemodes.Pol) {
-                    // Only pol callouts
-                    Game.LogTrivial("[FireyCallouts] Police officer mode enabled. Register callouts.");
-                    if (Initialization.illegalFirework) { Functions.RegisterCallout(typeof(Callouts.IllegalFirework)); }
-                } else {
-                    // Only fire callouts
-                    Game.LogTrivial("[FireyCallouts] Firefighter mode enabled. Register callouts.");
-
-                }
-
                 if (Initialization.burningGarbage) { Functions.RegisterCallout(typeof(Callouts.DumpsterFire)); }
                 if (Initialization.burningTruck) { Functions.RegisterCallout(typeof(Callouts.BurningTruck)); }
-                if (Initialization.lostFreight) { Functions.RegisterCallout(typeof(Callouts.LostFreight)); }
+                if (Initialization.campfire) { Functions.RegisterCallout(typeof(Callouts.Campfire)); }
                 if (Initialization.heliCrash) { Functions.RegisterCallout(typeof(Callouts.HeliCrash)); }
+                if (Initialization.illegalFirework) { Functions.RegisterCallout(typeof(Callouts.IllegalFirework)); }
+                if (Initialization.lostFreight) { Functions.RegisterCallout(typeof(Callouts.LostFreight)); }
                 if (Initialization.planeLanding) { Functions.RegisterCallout(typeof(Callouts.PlaneLanding)); }
+                if (Initialization.smokeDetected) { Functions.RegisterCallout(typeof(Callouts.SmokeDetected)); }
                 if (Initialization.structuralFire) { Functions.RegisterCallout(typeof(Callouts.StructuralFire)); }
             }
             

@@ -27,6 +27,7 @@ namespace FireyCallouts.Utilitys {
         // Controls & other settings
         internal static Keys endKey = Keys.Delete;
         internal static Keys dialogueKey = Keys.Y;
+        internal static double maxCalloutDistance = 800f;
 
         internal static void Initalize() {
             string pathToFile = "Plugins/LSPDFR/FireyCallouts.ini";
@@ -36,6 +37,9 @@ namespace FireyCallouts.Utilitys {
             // Controls
             endKey = ini.ReadEnum("Controls", "endKey", Keys.Delete);
             dialogueKey = ini.ReadEnum("Controls", "dialogueKey", Keys.Y);
+
+            // Settings
+            maxCalloutDistance = ini.ReadDouble("Settings", "minCalloutDist", 800f);
 
             // Callouts
             burningTruck = ini.ReadBoolean("Callouts", "burningTruck", true);
