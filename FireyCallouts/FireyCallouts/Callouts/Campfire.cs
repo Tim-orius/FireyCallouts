@@ -13,7 +13,7 @@ using FireyCallouts.Utilitys;
 
 
 namespace FireyCallouts.Callouts {
-    [CalloutInfo("Campfire", CalloutProbability.Low)]
+    [CalloutInfo("Campfire", CalloutProbability.Medium)]
 
     class Campfire : Callout {
 
@@ -22,10 +22,10 @@ namespace FireyCallouts.Callouts {
         // (First in array is center position)
         private List<Vector3> locations = new List<Vector3>() { new Vector3(1088.714f, -681.0089f, 56.54359f), // Mirror Park
                                                                 new Vector3(-1384.228f, -1384.739f, 3.151442f), // Beach
-                                                                new Vector3(-1154.693f, 929.415f, 198.1925f), // Voínewood Hills (south side)
+                                                                new Vector3(-1154.693f, 929.415f, 198.1925f), // Vinewood Hills (south side)
                                                                 new Vector3(1897.169f, 438.3262f, 164.0482f), // Lake above dam (at facility)
                                                                 new Vector3(-439.5568f, 1587.239f, 357.8765f), // Vinewood Hills (north side)
-                                                                new Vector3(2635.188f, 3662.036f, 101.6726f), // Sandy Shores
+                                                                new Vector3(2635.188f, 3662.036f, 101.9726f), // Sandy Shores
                                                                 new Vector3(-1042.187f, 4374.532f, 11.534f), // Cassidy Creek
                                                                 new Vector3(-1011.776f, 5070.507f, 173.8113f) // Paleto Forest
                                                               };
@@ -43,6 +43,7 @@ namespace FireyCallouts.Callouts {
         private string[] weaponList = new string[] { "weapon_flaregun", "weapon_molotov", "weapon_petrolcan" };
 
         private Vector3 spawnPoint;
+        private Vector3 logSpawn;
         private Vector3 area;
         private Blip locationBlip;
         private List<Ped> suspects = new List<Ped>();
@@ -81,7 +82,7 @@ namespace FireyCallouts.Callouts {
             List<Vector3> possibleLocations = new List<Vector3>();
             
             foreach (Vector3 l in locations) {
-                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f) {
+                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < Initialization.maxCalloutDistance) {
                     possibleLocations.Add(l);
                 }
             }
@@ -101,9 +102,11 @@ namespace FireyCallouts.Callouts {
             CalloutPosition = spawnPoint;
 
             // Lower spawn point due to the wood spawning in mid air
-            spawnPoint.Z -= 2;
+            spawnPoint.Z -= 0.5f;
+            logSpawn = spawnPoint;
+            logSpawn.Z -= 1.5f;
 
-            fireWood = new Rage.Object("prop_fncwood_16g", spawnPoint);
+            fireWood = new Rage.Object("prop_fncwood_16g", logSpawn);
             fireWood.MakePersistent();
 
             if (decision < 4) {
@@ -183,7 +186,7 @@ namespace FireyCallouts.Callouts {
         }
 
         public bool AbortCallout() {
-            Game.LogTrivial("[FireyCallouts][Log] Abort 'Dumpster Fire' callout. Locations too far away (> 800).");
+            Game.LogTrivial("[FireyCallouts][Log] Abort 'Campfire' callout. Locations too far away (> "+Initialization.maxCalloutDistance.ToString()+").");
 
             // Clean up if not accepted
             if (locationBlip.Exists()) locationBlip.Delete();
@@ -288,7 +291,7 @@ namespace FireyCallouts.Callouts {
                 }
 
                 // Story
-                if (suspects[0].Exists() && !suspectDialogueComplete && !nobodyThere && suspects[0].DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 11f) {
+                if (suspects.Count > 0 && suspects[0].Exists() && !suspectDialogueComplete && !nobodyThere && suspects[0].DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 11f) {
                     if (Game.IsKeyDown(Initialization.dialogueKey)) {
                         // Story
                         Game.DisplaySubtitle(dialogues[dialogueChoice][dialogueCount]);
@@ -320,7 +323,7 @@ namespace FireyCallouts.Callouts {
                         suspectsArrested++;
                     }
                 }
-                if (suspectsDead == suspects.Count || suspectsArrested == suspects.Count) {
+                if (suspectsDead == suspects.Count || suspectsArrested == suspects.Count || suspectsArrested + suspectsDead >= suspects.Count) {
                     End();
                 }
 
@@ -333,13 +336,12 @@ namespace FireyCallouts.Callouts {
                 if (p.Exists()) p.Dismiss();
             }
             if (locationBlip.Exists()) locationBlip.Delete();
-            if (fireWood.Exists()) fireWood.Dismiss();
+            if (fireWood.Exists()) fireWood.Delete();
 
             // Check if ended by pressing end and delete fires; Otherwise keep them
             // Warning: ending the callout without deleting the fires is causing the fires to burn indefinitely
             if (endKeyPressed) {
                 foreach (uint f in fireList) {
-                    //NativeFunction.CallByName<uint>("REMOVE_SCRIPT_FIRE", f);
                     NativeFunction.Natives.RemoveScriptFire(f);
                 }
             }

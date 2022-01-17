@@ -59,11 +59,11 @@ namespace FireyCallouts.Callouts {
 
             // Check locations around 800f to the player
             List<Vector3[]> possibleLocations = new List<Vector3[]>();
-            
+
             /*
             foreach (Vector3[] lo in locations) {
                 Vector3 l = lo[0];
-                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f) {
+                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < Initialization.maxCalloutDistance) {
                     possibleLocations.Add(lo);
                 }
             }
@@ -161,7 +161,7 @@ namespace FireyCallouts.Callouts {
         }
 
         public bool AbortCallout() {
-            Game.LogTrivial("[FireyCallouts][Log] Abort 'Structural Fire' callout. Locations too far away (> 800).");
+            Game.LogTrivial("[FireyCallouts][Log] Abort 'Structural Fire' callout. Locations too far away (> " + Initialization.maxCalloutDistance.ToString() + ").");
 
             // Clean up if not accepted
             if (suspect.Exists()) suspect.Delete();

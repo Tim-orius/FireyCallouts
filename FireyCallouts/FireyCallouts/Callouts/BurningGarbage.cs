@@ -13,7 +13,7 @@ using FireyCallouts.Utilitys;
 
 
 namespace FireyCallouts.Callouts {
-    [CalloutInfo("Dumpster Fire", CalloutProbability.Low)]
+    [CalloutInfo("Dumpster Fire", CalloutProbability.Medium)]
 
     class DumpsterFire : Callout {
 
@@ -50,7 +50,7 @@ namespace FireyCallouts.Callouts {
             // Check locations around 800f to the player
             List<Vector3> possibleLocations = new List<Vector3>();
             foreach (Vector3 l in locations) {
-                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f) {
+                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < Initialization.maxCalloutDistance) {
                     possibleLocations.Add(l);
                 }
             }
@@ -130,7 +130,7 @@ namespace FireyCallouts.Callouts {
         }
 
         public bool AbortCallout() {
-            Game.LogTrivial("[FireyCallouts][Log] Clean up 'Dumpster Fire' callout.");
+            Game.LogTrivial("[FireyCallouts][Log] Abort 'Dumpster Fire' callout. Locations too far away (> " + Initialization.maxCalloutDistance.ToString() + ").");
 
             // Clean up if not accepted
             if (suspect.Exists()) suspect.Delete();

@@ -14,7 +14,7 @@ using FireyCallouts.Utilitys;
 
 namespace FireyCallouts.Callouts {
 
-    [CalloutInfo("Lost Freight", CalloutProbability.Low)]
+    [CalloutInfo("Lost Freight", CalloutProbability.Medium)]
 
     class LostFreight : Callout {
 
@@ -266,7 +266,9 @@ namespace FireyCallouts.Callouts {
                     // Story driver (suspect)
                     if (Game.IsKeyDown(Initialization.dialogueKey) && !suspectDialogueComplete && decision >= 2) {
                         if (decision < 4) {
-                            Game.DisplaySubtitle(dialoguesSuspect[storyRunaway][dialogueCountSuspect]);
+                            if (dialogueCountSuspect < dialoguesWitness[storyDecisionSuspect].Length) {
+                                Game.DisplaySubtitle(dialoguesSuspect[storyDecisionSuspect][dialogueCountSuspect]);
+                            }
                             dialogueCountSuspect++;
                             GameFiber.Wait(1000);
 
@@ -275,8 +277,9 @@ namespace FireyCallouts.Callouts {
                             }
 
                         } else {
-
-                            Game.DisplaySubtitle(dialoguesSuspect[storyDecisionSuspect][dialogueCountSuspect]);
+                            if (dialogueCountSuspect < dialoguesWitness[storyDecisionSuspect].Length) {
+                                Game.DisplaySubtitle(dialoguesSuspect[storyDecisionSuspect][dialogueCountSuspect]);
+                            }
                             dialogueCountSuspect++;
                             GameFiber.Wait(1000);
 
@@ -295,9 +298,10 @@ namespace FireyCallouts.Callouts {
                                                 < suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)))) {
                     // Story witness
                     if (Game.IsKeyDown(Initialization.dialogueKey) && !witnessDialogueComplete) {
-                        Game.DisplaySubtitle(dialoguesWitness[storyDecisionWitness][dialogueCountWitness]);
+                        if (dialogueCountWitness < dialoguesWitness[storyDecisionWitness].Length) {
+                            Game.DisplaySubtitle(dialoguesWitness[storyDecisionWitness][dialogueCountWitness]);
+                        }
                         dialogueCountWitness++;
-                        Game.LogTrivial("[FireyCallouts][Debug-log] Dialogue Counter: " + dialogueCountWitness.ToString() + " Dialogue: " + dialoguesWitness[storyDecisionWitness][dialogueCountWitness]);
                         GameFiber.Wait(1000);
 
                         if (dialogueCountWitness >= dialoguesWitness[storyDecisionWitness].Length) {

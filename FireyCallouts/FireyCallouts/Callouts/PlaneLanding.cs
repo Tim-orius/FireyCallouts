@@ -55,7 +55,7 @@ namespace FireyCallouts.Callouts {
             Vector3 l;
             for (int zz = 0; zz < landLocations.Count; zz++) {
                 l = landLocations[zz];
-                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 800f) {
+                if (l.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < Initialization.maxCalloutDistance) {
                     possibleLandLocations.Add(l);
                     possibleSpawnLocations.Add(spawnLocations[zz]);
                 }
@@ -117,7 +117,7 @@ namespace FireyCallouts.Callouts {
         }
 
         public bool AbortCallout() {
-            Game.LogTrivial("[FireyCallouts][Log] Abort 'Campfire' callout. Locations too far away (> 800).");
+            Game.LogTrivial("[FireyCallouts][Log] Abort 'Plane Landing' callout. Locations too far away (> " + Initialization.maxCalloutDistance.ToString() + ").");
 
             // Clean up if not accepted
             if (suspect.Exists()) suspect.Delete();
@@ -170,29 +170,36 @@ namespace FireyCallouts.Callouts {
             GameFiber.StartNew(delegate {
 
                 // Distance plane - player is < 40
-                if (suspect.Exists() && suspectVehicle.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f && !distanceCheck) {
+                if (suspect.Exists() && suspectVehicle.Exists() && !distanceCheck && (suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 40f 
+                    || suspectVehicle.DistanceTo(landPoint) < 40f)) {
                     suspect.KeepTasks = true;
                     suspectVehicle.EngineHealth = 1;
-                    if (suspectBlip.Exists()) suspectBlip.Delete();
 
                     distanceCheck = true;
                     GameFiber.Wait(2000);
                 }
+                if (suspectBlip.Exists() && suspect.DistanceTo(Game.LocalPlayer.Character.GetOffsetPosition(Vector3.RelativeFront)) < 30f) suspectBlip.Delete();
 
                 // Plane touchdown
                 if (suspectVehicle.Exists() && suspect.Exists() && suspectVehicle.DistanceTo(landPoint) < 5f && (landingSituation == 0)) {
                     // Explode if the plane is dedicated to crash
-                    if(willCrash) {
+                    if (willCrash) {
                         suspect.Tasks.CruiseWithVehicle(10f);
                         suspectVehicle.Explode();
+                        landingSituation = 2;
                     } else {
                         suspect.Tasks.PerformDrivingManeuver(VehicleManeuver.GoForwardStraightBraking);
+                        landingSituation = 1;
                     }
-                    landingSituation = 1;
                     // Call Backup (Ambulance, Fire and Police)
-                    CallBackup();
-                    Game.LogTrivial("[FireyCallouts][Debug] Landed.");
+                    //CallBackup();
+                    Game.LogTrivial("[FireyCallouts][Debug] Landed. Landing situation = "+landingSituation.ToString());
                     GameFiber.Wait(3000);
+                }
+
+                // Making sure the plane comes to a stop eventually if the touchdown operations fail
+                if (suspectVehicle.Exists() && suspect.Exists() && suspectVehicle.DistanceTo(landPoint) > 75f && (landingSituation != 0)) {
+                    suspectVehicle.Explode();
                 }
 
                 if (landingSituation == 1 && !suspect.IsDead && suspectVehicle.Velocity == Vector3.Zero) {
@@ -211,11 +218,9 @@ namespace FireyCallouts.Callouts {
             if (suspectVehicle.Exists()) { suspectVehicle.Dismiss(); }
             if (suspectBlip.Exists()) { suspectBlip.Delete(); }
 
-            /*
             foreach (Vehicle ev in emergencyVehicles) {
                 if (ev.Exists()) { ev.Dismiss(); }
             }
-            */
 
             Functions.PlayScannerAudio("WE_ARE_CODE_4");
 
